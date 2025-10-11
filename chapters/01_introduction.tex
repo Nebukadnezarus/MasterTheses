@@ -3,93 +3,26 @@
 
 \chapter{Introduction}\label{chapter:introduction}
 
-\section{Section}
-Citation test~\parencite{latex}.
+\section{Motivation}
+Micro air vehicles (MAVs) with efficient autonomous navigation can strengthen applications such as search-and-rescue and last-mile delivery, where safety, robustness, and endurance are critical. Conventional quadrotors offer agility and precise control but are power-inefficient in sustained forward flight. Fixed-wing platforms are efficient but cannot hover and are less maneuverable in confined spaces. Hybrid vertical take-off and landing (VTOL) concepts improve mission versatility but increase mechanical and control complexity. This thesis investigates an intermediate design: a multirotor augmented with fixed aerodynamic surfaces to harvest passive lift during horizontal motion while keeping multirotor agility.
 
-Acronyms must be added in \texttt{main.tex} and are referenced using macros. The first occurrence is automatically replaced with the long version of the acronym, while all subsequent usages use the abbreviation.
+\section{Problem statement and scope}
+In the presence of aerodynamic surfaces, hard-to-model aerodynamic forces become significant and challenge controller design. We aim to develop a platform and control strategy that:
+\begin{itemize}
+  \item preserves quadrotor agility while improving forward-flight efficiency via passive lift,
+  \item tracks agile trajectories accurately without requiring aerodynamic parameter identification, and
+  \item remains robust to modeling errors and disturbances.
+\end{itemize}
+The central question is whether an Incremental Nonlinear Dynamic Inversion (INDI)-based controller can achieve accurate trajectory tracking on an aerodynamic surface-enhanced quadrotor without an explicit aerodynamic model.
 
-E.g. \texttt{\textbackslash ac\{TUM\}, \textbackslash ac\{TUM\}} $\Rightarrow$ \ac{TUM}, \ac{TUM}
+\section{Contributions}
+This thesis presents:
+\begin{itemize}
+  \item a design of an aerodynamic surface-enhanced quadrotor in X-wing configuration,
+  \item a dynamics model combining a standard quadrotor 6-DoF model with simplified quadratic lift/drag,
+  \item a trajectory-tracking controller based on geometric control and INDI, including a coordinated-turn option, and
+  \item an experimental evaluation: thrust-map identification, agility/controllability, aerodynamic disturbance characterization, and efficiency assessment.
+\end{itemize}
 
-For more details, see the documentation of the \texttt{acronym} package\footnote{\url{https://ctan.org/pkg/acronym}}.
-\subsection{Subsection}
-
-See~\autoref{tab:sample}, \autoref{fig:sample-drawing}, \autoref{fig:sample-plot}, \autoref{fig:sample-listing}.
-
-\begin{table}[htpb]
-  \caption[Example table]{An example for a simple table.}\label{tab:sample}
-  \centering
-  \begin{tabular}{l l l l}
-    \toprule
-      A & B & C & D \\
-    \midrule
-      1 & 2 & 1 & 2 \\
-      2 & 3 & 2 & 3 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\begin{figure}[htpb]
-  \centering
-  % This should probably go into a file in figures/
-  \begin{tikzpicture}[node distance=3cm]
-    \node (R0) {$R_1$};
-    \node (R1) [right of=R0] {$R_2$};
-    \node (R2) [below of=R1] {$R_4$};
-    \node (R3) [below of=R0] {$R_3$};
-    \node (R4) [right of=R1] {$R_5$};
-
-    \path[every node]
-      (R0) edge (R1)
-      (R0) edge (R3)
-      (R3) edge (R2)
-      (R2) edge (R1)
-      (R1) edge (R4);
-  \end{tikzpicture}
-  \caption[Example drawing]{An example for a simple drawing.}\label{fig:sample-drawing}
-\end{figure}
-
-\begin{figure}[htpb]
-  \centering
-
-  \pgfplotstableset{col sep=&, row sep=\\}
-  % This should probably go into a file in data/
-  \pgfplotstableread{
-    a & b    \\
-    1 & 1000 \\
-    2 & 1500 \\
-    3 & 1600 \\
-  }\exampleA
-  \pgfplotstableread{
-    a & b    \\
-    1 & 1200 \\
-    2 & 800 \\
-    3 & 1400 \\
-  }\exampleB
-  % This should probably go into a file in figures/
-  \begin{tikzpicture}
-    \begin{axis}[
-        ymin=0,
-        legend style={legend pos=south east},
-        grid,
-        thick,
-        ylabel=Y,
-        xlabel=X
-      ]
-      \addplot table[x=a, y=b]{\exampleA};
-      \addlegendentry{Example A}
-      \addplot table[x=a, y=b]{\exampleB};
-      \addlegendentry{Example B}
-    \end{axis}
-  \end{tikzpicture}
-  \caption[Example plot]{An example for a simple plot.}\label{fig:sample-plot}
-\end{figure}
-
-\begin{figure}[htpb]
-  \centering
-  \begin{tabular}{c}
-  \begin{lstlisting}[language=SQL]
-    SELECT * FROM tbl WHERE tbl.str = "str"
-  \end{lstlisting}
-  \end{tabular}
-  \caption[Example listing]{An example for a source code listing.}\label{fig:sample-listing}
-\end{figure}
+\section{Thesis organization}
+Chapter~\ref{chapter:related-work} reviews related work and motivates the chosen design. Chapter~\ref{chapter:platform-design} details the platform. Chapter~\ref{chapter:dynamics-model} derives the model. Chapter~\ref{chapter:control-architecture} presents the controller. Chapters~\ref{chapter:experimental-setup} and~\ref{chapter:experiments-evaluation} describe the setup and experiments. Chapter~\ref{chapter:conclusion} concludes.
