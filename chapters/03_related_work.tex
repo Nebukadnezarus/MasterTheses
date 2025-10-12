@@ -2,18 +2,112 @@
 
 \chapter{Related Work}\label{chapter:related-work}
 
-We review UAV archetypes and control approaches with emphasis on agility, efficiency, and controllability, motivating our X-wing multirotor with passive aerodynamic lift and an INDI-based controller.
+Designing a UAV that is both agile (e.g., sustained $\geq 3\,g$ banked turns on meter-scale radii with low tracking error) and energy-efficient (low Wh/km or J/m at cruise), while remaining controllable across hover and forward flight, robust to aerodynamic disturbances, and implementable with moderate complexity, requires weighing trade-offs across canonical configurations: multirotors, fixed-wing, tailsitters, tiltrotors/tilt-wings, and quadplane VTOLs.
+We additionally review ``aerodynamically augmented'' multicopters---i.e., quadrotors with small fixed lifting surfaces or shrouds---because they can mitigate the multirotor's forward-flight inefficiency without incurring the full complexity of morphing hybrids.
 
-\section{UAV archetypes and trade-offs}
-- Quadrotors: highly agile and controllable, hover capable, but power-inefficient in high-speed flight.
-- Fixed-wing: efficient at speed and range, but poor agility in confined spaces; requires runway/launch.
-- Tailsitters/tilt-rotors (VTOL): combine hover and efficient cruise; transitions and cross-couplings complicate control.
-- Aerodynamic-surface-enhanced multirotors: retain quad agility while harvesting passive lift in forward flight.
 
-\section{Control approaches}
-- Geometric control on SE(3) and differential flatness-based planners for agile trajectory tracking.
-- Disturbance observers, incremental (nonlinear) dynamic inversion, and adaptive methods for model uncertainties.
-- INDI in particular achieves robustness by leveraging incremental relations between actuator changes and measured accelerations/ang. rates, reducing dependence on aerodynamic models.
+\section{Baselines: Agility vs.\ Efficiency}
 
-\section{Positioning our work}
-We target accurate tracking during agile maneuvers without modeling aerodynamic coefficients, enabled by INDI, while leveraging passive lift for efficiency during forward flight. This guides design choices in Chapters~\ref{chapter:platform-design} and~\ref{chapter:control-architecture}.
+\paragraph{Pure multirotors}
+Pure multirotors excel in agility and controllability in hover and low-speed flight.
+State-of-the-art quadrotors routinely track aggressive trajectories at 2--5\,g and 40--70\,km/h with centimeter-level RMS errors using differential-flatness feedforward plus robust inner loops---often incremental nonlinear dynamic inversion (INDI)~\cite{Tal2018,Tal2021,Foehn2022}.
+For example, Tal and Karaman report tracking at 12.9\,m/s with up to 2.1\,g and 6.6\,cm RMS error, and explicit robustness to added drag and rope pulls due to INDI's disturbance-rejection properties~\cite{Tal2018}.
+Foehn et al.'s Agilicious platform demonstrates up to $\sim$5\,g and $\sim$70\,km/h autonomous tracking with modern model-predictive and differential-flatness-based controllers, again emphasizing agility and controllability~\cite{Foehn2022}.
+However, multirotors are energetically inefficient in forward flight because thrust must be tilted to produce lift and drag grows quickly with speed.
+
+\paragraph{Fixed-wing aircraft}
+By contrast, fixed-wing aircraft achieve much lower J/m at cruise because wings supply lift with high $L/D$, but they cannot hover.
+
+\paragraph{Hybrids: tailsitters, tiltrotors, and quadplanes}
+Tailsitters and tiltrotor/tilt-wing hybrids attempt to combine both: hover on rotors, then transition to wing-borne flight for efficiency.
+Recent tailsitter work shows promising agility and envelope coverage---e.g., Lu et al.\ report 10--20\,m/s trajectories with $\sim$2.5\,g agile maneuvers using a flatness-based planner and robust tracking~\cite{Lu2022}, and Tal and Karaman demonstrate global trajectory-tracking and agile uncoordinated flight (e.g., sideways/knife-edge) using a global INDI framework~\cite{Tal2021Tailsitter,Tal2022Global}.
+Tilt-wing/tilt-rotor concepts have matured in modeling and flight-dynamics/transitions (e.g., Daud Filho et al.\ present dynamic models and simulated transition trajectories for a canard-plus-wing tilt concept) but remain mechanically and algorithmically complex, with challenging cross-couplings during transitions~\cite{DaudFilho2024,Misra2022}.
+Quadplanes (fixed wing + vertical-lift rotors) offer practical VTOL with cruise efficiency; experimental examples (e.g., a tandem-wing quadplane) target long-range VTOL with simpler mechanisms than tilting actuators, though added mass/drag can degrade hover agility and gust robustness~\cite{Okulski2022}.
+
+
+\section{Controller Classes Used Across the Spectrum}
+
+Geometric SE(3) control established a rigorous foundation for aggressive multirotor tracking with global attitude representations~\cite{Lee2010} and geometric adaptive variants handle parametric uncertainties~\cite{Goodarzi2015}.
+Differential-flatness-based planning/control (e.g., minimum-snap) is ubiquitous for trajectory generation and feedforward tracking~\cite{Mellinger2011,Tal2018}.
+INDI has become a go-to inner-loop choice for robustness to unmodeled aero forces/torques at high speed and in gusts~\cite{Sieberling2010,Smeur2017}.
+A direct empirical comparison on agile quadrotor flight found that both NMPC and differential-flatness-based controllers benefit markedly ($\approx$78\% error reduction) from coupling to an INDI inner loop and drag modeling at speeds up to 20\,m/s~\cite{Sun2021}.
+These results are important because the proposed quad-with-small-wings concept aims to keep a multirotor control stack (differential-flatness/geometric + INDI) while adding lightweight aerodynamics.
+
+
+\section{Aerodynamic Augmentation on Multicopters}
+
+The most directly relevant evidence comes from micro-to-small UAVs that add fixed lifting surfaces to multirotors:
+
+\paragraph{Small wings}
+Dawkins and DeVries integrated small wings on a micro-quad and quantified the trade-off: $\sim$35\% energy saving in forward flight, but $\sim$45\% extra power in hover due to added mass/drag; the wing ``pays off'' beyond $\sim$3--5\,m/s depending on angle-of-attack and prop wash interaction~\cite{Dawkins2018}.
+They report smoother tracking and reduced pitch angles at speed, indicating improved controllability in forward flight, but some hover agility penalty.
+
+Xiao et al.\ designed a ``lifting-wing fixed on multirotor'' with a decoupled wing mount.
+On a 1.2\,kg quad, they measured 50.14\% less electrical power at 15\,m/s compared with the bare quad; optimal cruise power shifted from $\approx$200--250\,W down to $\approx$100--125\,W with the wing, without major changes to the multirotor controller~\cite{Xiao2020}.
+This is a strong, quantitative demonstration that small fixed aerodynamic surfaces can more than halve J/m at moderate forward speeds while preserving conventional quad control.
+
+\paragraph{Airfoilized arms}
+Freitas et al.\ systematically tested airfoilized arms on a quad (DJI F450 class).
+Arm airfoils reduced arm drag and delivered $\sim$19--31\% less electrical power in forward flight at 10--15\,m/s (depending on angle) and modest improvements to top speed, with negligible hover penalty and no controller change~\cite{Freitas2025}.
+This is especially attractive for ``agility-first'' designs where we seek free forward-flight efficiency.
+
+\paragraph{Summary}
+These works collectively show that adding small lifting/streamlining surfaces to a quad yields measured cruise efficiency gains ($\approx$20--50\% power reduction at $\approx$10--15\,m/s) at minimal implementation cost: no tilting mechanisms, no transitions, and only modest or negligible changes to hover agility if the surfaces are small and decoupled from rotor flows.
+Importantly, the canonical quadrotor controller stack (geometric/differential-flatness + INDI inner loop) remains applicable, maintaining excellent tracking ($\sim$few-cm RMS) and high gust robustness documented for agile quads~\cite{Tal2018,Foehn2022,Sun2021}.
+
+
+\section{Shrouds and Ducts as Augmentation}
+
+Shrouding improves hover power loading and can protect the rotors.
+MDPI Drones studies report $\sim$15--28\% improvements in lift and ``FM efficiency'' for optimized ducted multi-propeller configurations in hover~\cite{Li2021}.
+Classic MAV shroud experiments show up to $\sim$30\% power-loading gains at small scales~\cite{Hrishikeshavan2014}, and broader surveys note up to $>$50\% thrust gains or equivalent power reductions in hover for well-designed ducts, but performance degrades at higher advance ratios (forward flight) due to inlet losses and added frontal area~\cite{Chew2021,Pereira2008}.
+Thus, shrouds are advantageous for hover/low-speed efficiency and safety but can hurt high-speed efficiency and cross-wind agility---less aligned with our ``agile forward-flight efficiency'' goal.
+
+
+\section{Quantitative Comparison Across Criteria}
+
+From the studies above:
+
+\paragraph{Agility}
+Pure multirotors: $\geq 3\,g$, $\leq 0.1\,\mathrm{m}$ RMS tracking demonstrated~\cite{Tal2018,Foehn2022}.
+Tailsitters: agile aerobatics and 2--3\,g transitions are feasible~\cite{Lu2022,Tal2022Global}, but hover control surfaces may be saturation-limited in gusts.
+Quadplanes/tilt designs: agility is generally lower in hover due to added inertia and interference; transitions add constraints~\cite{Okulski2022,Misra2022}.
+
+\paragraph{Efficiency (forward flight)}
+Small fixed wings/airfoils on quads reduce cruise power by $\sim$20--50\% at 10--15\,m/s~\cite{Dawkins2018,Xiao2020,Freitas2025}.
+Shrouds: +15--30\% hover power loading, but often worse at higher advance ratios~\cite{Li2021,Hrishikeshavan2014,Chew2021}.
+Hybrids (tilt/quadplane/tailsitter) achieve fixed-wing-like J/m at cruise but pay complexity/weight penalties.
+
+\paragraph{Controllability \& transitions}
+Multirotors and ``quad + small wings'' avoid mode transitions entirely---hover/forward authority comes from the same actuators; differential-flatness/geometric + INDI covers both regimes~\cite{Lee2010,Tal2018}.
+Hybrids require transition path planning and mode-dependent control allocation~\cite{DaudFilho2024,Misra2022}.
+
+\paragraph{Robustness to aero disturbances}
+INDI-based quads show strong disturbance rejection without precise aero models~\cite{Sieberling2010,Smeur2017,Sun2021}.
+Hybrids can be robust, but robustness proofs and quantitative gust testing during transition remain sparse.
+
+\paragraph{Implementation complexity}
+Adding small fixed surfaces is mechanically trivial and controller-agnostic; shrouds add structure and possible crosswind penalties; hybrids add mechanisms, sensors, and software complexity (e.g., NMPC with switching and detailed aerodynamics).
+
+
+\section{Gaps and Open Issues}
+
+Despite progress, three gaps remain:
+\begin{enumerate}
+  \item There are few quantitative studies of small, fixed wings on quads that explicitly preserve aggressive maneuverability ($\geq 3\,g$, meter-scale turns) while reporting cruise Wh/km (or J/m) and closed-loop tracking error; most report \% power savings at one speed~\cite{Dawkins2018,Xiao2020}.
+  \item Disturbance modeling for augmented quads is incomplete, particularly interactions between rotor wakes and small wings across the speed envelope and in crosswinds; robust INDI masks some deficiencies, but better disturbance observers/models would inform design trade-offs~\cite{Sun2021}.
+  \item For hybrid VTOLs, coordinated-turn performance (load factors, radius, sideslip limits) with full transition dynamics is under-reported; Daud Filho et al.\ detail transitions but not coordinated turns with quantitative lateral-acceleration margins~\cite{DaudFilho2024}.
+\end{enumerate}
+These gaps motivate a design that seeks measured efficiency gains with minimal impact on agility and low complexity.
+
+
+\section{Why a Quadrotor with Small Fixed Aerodynamic Surfaces?}
+
+The literature supports a clear argument:
+\begin{enumerate}
+  \item \textbf{Preserve hover agility and controllability}: no transitions, mature differential-flatness/geometric + INDI stack with proven centimeter-level tracking and multi-g maneuvers~\cite{Lee2010,Tal2018,Foehn2022}.
+  \item \textbf{Capture meaningful cruise-efficiency gains}: $\sim$20--50\% power reduction around 10--15\,m/s using small wings or airfoilized arms~\cite{Dawkins2018,Xiao2020,Freitas2025}, directly lowering J/m and extending range/mission time without complex mechanisms.
+  \item \textbf{Maintain robustness to disturbances via INDI} without high-fidelity aero models~\cite{Sieberling2010,Smeur2017,Sun2021}.
+  \item \textbf{Keep implementation complexity low}: fixed surfaces; unchanged propulsion and control allocation, avoiding the mass, moving parts, and software overhead of tilt/transition systems~\cite{Misra2022,Okulski2022}.
+\end{enumerate}
+Given the target criteria---agility, efficiency at cruise, controllability across the envelope, gust robustness, and modest complexity---the evidence favors a quadrotor with small fixed aerodynamic surfaces over more complex hybrids.
