@@ -1,0 +1,22 @@
+% Reusable pgfplots styles for consistent thesis figures
+\ProvidesFile{pgfplots_styles.tex}
+
+% Base style for plots
+\pgfplotsset{
+  tumplot/.style={
+    width=0.75\linewidth,
+    height=0.45\linewidth,
+    grid=both,
+    thick,
+    legend pos=south east,
+    every axis plot/.append style={line join=round},
+    % unify fonts with main text
+    tick label style={font=\small},
+    label style={font=\small},
+    legend style={font=\small}
+  },
+  tumscatter/.style={only marks, mark size=1.7pt},
+  tumorange/.style={color=TUMAccentOrange},
+  tumgreen/.style={color=TUMAccentGreen},
+  tumblue/.style={color=TUMBlue},
+}

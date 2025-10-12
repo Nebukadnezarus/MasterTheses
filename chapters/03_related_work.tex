@@ -1,0 +1,19 @@
+% !TeX root = ../main.tex
+
+\chapter{Related Work}\label{chapter:related-work}
+
+We review UAV archetypes and control approaches with emphasis on agility, efficiency, and controllability, motivating our X-wing multirotor with passive aerodynamic lift and an INDI-based controller.
+
+\section{UAV archetypes and trade-offs}
+- Quadrotors: highly agile and controllable, hover capable, but power-inefficient in high-speed flight.
+- Fixed-wing: efficient at speed and range, but poor agility in confined spaces; requires runway/launch.
+- Tailsitters/tilt-rotors (VTOL): combine hover and efficient cruise; transitions and cross-couplings complicate control.
+- Aerodynamic-surface-enhanced multirotors: retain quad agility while harvesting passive lift in forward flight.
+
+\section{Control approaches}
+- Geometric control on SE(3) and differential flatness-based planners for agile trajectory tracking.
+- Disturbance observers, incremental (nonlinear) dynamic inversion, and adaptive methods for model uncertainties.
+- INDI in particular achieves robustness by leveraging incremental relations between actuator changes and measured accelerations/ang. rates, reducing dependence on aerodynamic models.
+
+\section{Positioning our work}
+We target accurate tracking during agile maneuvers without modeling aerodynamic coefficients, enabled by INDI, while leveraging passive lift for efficiency during forward flight. This guides design choices in Chapters~\ref{chapter:platform-design} and~\ref{chapter:control-architecture}.

@@ -9,6 +9,14 @@ pdf:
 watch:
 	+latexmk -interaction=nonstopmode -outdir="$(OUT)" -pdf -pvc -halt-on-error -jobname="$(jobname)" $(FILE)
 
+# Convenience targets
+.PHONY: light dark
+light:
+	$(MAKE) pdf jobname=$(FILE)
+
+dark:
+	$(MAKE) pdf jobname=dark
+
 .PHONY: _fachschaft-print
 _fachschaft-print:
 	@if grep -sq '^TUM-Dev LaTeX-Thesis-Template: twoside$$' $(OUT)/$(FILE).log; then \
@@ -26,6 +34,10 @@ _fachschaft-print:
 	else \
 		cp "$(OUT)/$(FILE).pdf" "$(OUT)/fachschaft_print.pdf"; \
 	fi;
+
+.PHONY: clean-dark
+clean-dark:
+	rm -f $(OUT)/dark.*
 
 .PHONY: clean
 clean:

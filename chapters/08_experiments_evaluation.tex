@@ -1,0 +1,32 @@
+% !TeX root = ../main.tex
+
+\chapter{Experiments and Evaluation}\label{chapter:experiments-evaluation}
+
+We design experiments to validate thrust mapping, agility/controllability, aerodynamic disturbance characterization, and efficiency gains.
+
+\section{Thrust map identification}
+- Throttle-to-thrust and RPM-to-thrust mapping; present identified curves and fitted models.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[tumplot, xlabel={Throttle [\%]}, ylabel={Thrust [N]}]
+      \addplot+[mark=*]
+        table[x=throttle_pct, y=thrust_N, col sep=comma]{data/thrustmap_throttle_from_lookup_full_drone_2808.csv};
+      \addlegendentry{Full drone (slice)}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Throttle–thrust curve derived from the thrust lookup at a fixed voltage slice.}
+\end{figure}
+
+\section{Agility and tracking}
+- 3g circles in flight arena; metrics: RMS position/attitude tracking error, control effort.
+
+\section{Aerodynamic forces/moments quantification}
+- Identify equivalent $k_D,k_L$ or $C_L(\alpha), C_D(\alpha)$ from maneuvering flight data; discuss sensitivity.
+
+\section{Efficiency assessment}
+- Compare theoretical quad thrust input vs. measured thrust input in AIDA hall flights; quantify energy savings due to passive lift.
+
+\section{Baseline comparison}
+- Compare against baseline quadrotor controller without INDI or without wings.

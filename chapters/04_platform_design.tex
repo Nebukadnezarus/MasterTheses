@@ -1,0 +1,18 @@
+% !TeX root = ../main.tex
+
+\chapter{Platform Design}\label{chapter:platform-design}
+
+We design an aerodynamic surface-enhanced quadrotor in X-wing configuration to preserve multirotor agility while benefiting from passive lift in forward flight.
+
+\section{Configuration and layout}
+- Quadrotor X configuration with integrated fixed wings (X-shaped planform) aligned with the rotor arms.
+- Structural considerations: wing aspect ratio, sweep/dihedral, stiffness, and mounting relative to CoG and rotor thrust lines.
+- Sensors and avionics: IMU, FC/ESCs, Jetson companion, motion capture (Vicon) for ground-truth.
+
+\section{Wing and aerodynamic surface choices}
+- Select planform and airfoil balancing lift at operational Reynolds numbers with low added mass.
+- Wing area and placement trade-offs: lift vs. added drag and control cross-coupling; ensure propeller inflow interactions are manageable.
+
+\section{Propulsion and actuation}
+- Motor-propeller pair sized for required thrust-to-weight and agility margins (e.g., 3g lateral load tracking).
+- Thrust and torque maps: throttle-to-RPM and RPM-to-thrust/torque characterization to support control allocation.

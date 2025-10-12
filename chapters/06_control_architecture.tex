@@ -1,0 +1,24 @@
+% !TeX root = ../main.tex
+
+\chapter{Control Architecture}\label{chapter:control-architecture}
+
+We design a trajectory-tracking controller combining geometric position/attitude control with Incremental Nonlinear Dynamic Inversion (INDI). Differential flatness provides reference generation. INDI reduces dependence on aerodynamic modeling and handles unmodeled disturbances.
+
+\section{Reference generation}
+Trajectory references $(\mathbf{p}_d,\dot{\mathbf{p}}_d,\ddot{\mathbf{p}}_d,\psi_d)$ from a flatness-based planner or minimum-snap polynomial, optionally enforcing coordinated-turn constraints in forward flight to bound sideslip.
+
+\section{Outer-loop (geometric SE(3))}
+Compute desired body z-axis from force command $\mathbf{f}_d=m(\ddot{\mathbf{p}}_d + \mathbf{k}_p\tilde{\mathbf{p}} + \mathbf{k}_v\tilde{\mathbf{v}} - \mathbf{g})$ and yaw $\psi_d$, yielding desired attitude $R_d$ and thrust $f_T$.
+
+\section{Inner-loop INDI}
+Using measured specific force and angular rates, INDI updates actuator commands incrementally:
+\begin{align}
+\Delta \mathbf{u} &= G^{-1}\,\big( \mathbf{y}_d - \mathbf{y} \big),
+\end{align}
+where $\mathbf{y}$ are directly measurable accelerations/attitude-rate related outputs. The key insight is that unmodeled aerodynamics cancel in the increment under small sampling intervals, leaving a local input-output mapping identified online via control effectiveness. See \cite{Smeur2016, Oosedo2017, vanKampen2018} and \cite{Tzoumanikas2021} for agile INDI on aerial platforms.
+
+\subsection{Aerodynamic cancellation argument}
+Let $\dot{\mathbf{y}}=f(\cdot)+B\,\mathbf{u}+\mathbf{d}$ with disturbance/aerodynamics $\mathbf{d}$. Over short intervals $\Delta t$, the change satisfies $\Delta \mathbf{y} \approx B\,\Delta\mathbf{u}$ as $\Delta \mathbf{d}$ is second-order. Thus the incremental control law does not require explicit aerodynamic parameters.
+
+\section{Coordinated turn option}
+Impose sideslip $\beta\approx0$ by aligning drag with body-x projected velocity and setting a yaw rate command consistent with lateral acceleration: $\dot{\psi}\approx a_y/(V\cos\theta)$ at moderate bank angles.

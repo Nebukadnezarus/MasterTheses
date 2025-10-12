@@ -1,0 +1,17 @@
+% !TeX root = ../main.tex
+
+\chapter{Background}\label{chapter:background}
+
+This chapter introduces foundational concepts relevant to agile and efficient autonomous 
+flight with aerodynamic surface-enhanced multirotors. It briefly covers flight vehicle classes, 6-DoF rigid-body kinematics and dynamics, and aerodynamic fundamentals (lift, drag, moments) used later in the modeling and control chapters.
+
+\section{Aerial vehicle classes}
+We distinguish multirotors, fixed-wing aircraft, tailsitters, and general VTOL hybrids. 
+Key trade-offs include agility, efficiency, range, and controllability. 
+Hybrids aim to combine vertical take-off and landing with efficient forward flight.
+
+\section{Rigid-body frames and notation}
+We use an inertial/world frame $\{\mathcal{I}\}$ and a body frame $\{\mathcal{B}\}$. Position $\mathbf{p}\in\mathbb{R}^3$, velocity $\mathbf{v}$, orientation $R\in SO(3)$, angular velocity $\boldsymbol{\omega}\in\mathbb{R}^3$. Standard hat/vee maps and skew operator $[\cdot]_\times$ are adopted.
+
+\section{Aerodynamic preliminaries}
+Lift $L=\tfrac{1}{2}\rho V^2 S C_L(\alpha)$ and drag $D=\tfrac{1}{2}\rho V^2 S C_D(\alpha)$, with $\alpha$ the angle of attack, reference area $S$, and air density $\rho$. For small angles or thin-airfoil approximations, $C_L\approx a_\alpha\,\alpha$, $C_D\approx C_{D0}+kC_L^2$. These models motivate the simplified quadratic lift/drag used in Chapter~\ref{chapter:dynamics-model}.

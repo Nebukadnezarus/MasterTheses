@@ -13,7 +13,7 @@ You can use the blue logos too, but do not change the file names.
 
 ## Dark theme (optional)
 
-To compile using the dark theme, append `jobname=dark` to the `make` call.
+To compile using the dark theme, either run `make dark` or append `jobname=dark` to the `make pdf` call.
 The included logos for this are `logos/tum-white.pdf` and `logos/faculty-white.pdf`.
 
 ## Commands
