@@ -1,0 +1,6 @@
+Model,Coefficient,Value,R_squared
+Quadratic: Thrust vs RPM,a (RPM²),0.05147478464068986,0.9971660414081746
+Quadratic: Thrust vs RPM,b (RPM),-0.0902358019936921,
+Quadratic: Thrust vs RPM,c (constant),-0.995945774853274,
+Linear: RPM vs Cmd,a (slope),19.258544881747024,0.9905544984558213
+Linear: RPM vs Cmd,b (intercept),3.6546734920350596,

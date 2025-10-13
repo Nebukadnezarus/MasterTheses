@@ -5,18 +5,55 @@
 We design experiments to validate thrust mapping, agility/controllability, aerodynamic disturbance characterization, and efficiency gains.
 
 \section{Thrust map identification}
-- Throttle-to-thrust and RPM-to-thrust mapping; present identified curves and fitted models.
+Throttle-to-thrust and RPM-to-thrust mapping; present identified curves and fitted models.
 
 \begin{figure}[htbp]
   \centering
   \begin{tikzpicture}
-  \begin{axis}[tumplot, xlabel={Throttle [\%]}, ylabel={Thrust [N]}]
-      \addplot+[mark=*]
-        table[x=throttle_pct, y=thrust_N, col sep=comma]{data/thrustmap_throttle_from_lookup_full_drone_2808.csv};
-      \addlegendentry{Full drone (slice)}
+  \begin{axis}[tumplot, xlabel={RPM [rev/min]}, ylabel={Thrust [N]}, width=0.8\textwidth]
+      % Original scatter data points
+      \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
+        table[x=rpm_motor1, y=force_z_N, col sep=comma]{data/thrust_map_raw_data.csv};
+      \addlegendentry{Measured data}
+      % Quadratic fit curve
+      \addplot[thick, TUMAccentOrange, no marks]
+        table[x=rpm, y=thrust_N_fitted, col sep=comma]{data/thrust_vs_rpm_quadratic_fit.csv};
+      \addlegendentry{Quadratic fit}
     \end{axis}
   \end{tikzpicture}
-  \caption{Throttle–thrust curve derived from the thrust lookup at a fixed voltage slice.}
+  \caption{Thrust vs RPM with quadratic fit: $T = 0.0515 \cdot \text{RPM}^2 - 0.0902 \cdot \text{RPM} - 0.996$ (N). $R^2 = 0.997$.}
+  \label{fig:thrust_vs_rpm}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[tumplot, xlabel={Command [\%]}, ylabel={RPM [rev/min]}, width=0.8\textwidth]
+      % Original scatter data points
+      \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
+        table[x=cmd, y=rpm_motor1, col sep=comma]{data/thrust_map_raw_data.csv};
+      \addlegendentry{Measured data}
+      % Linear fit line
+      \addplot[thick, TUMAccentOrange, no marks]
+        table[x=cmd, y=rpm_fitted, col sep=comma]{data/rpm_vs_cmd_linear_fit.csv};
+      \addlegendentry{Linear fit}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{RPM vs Command with linear fit: $\text{RPM} = 19.26 \cdot \text{cmd} + 3.65$ (rev/min). $R^2 = 0.991$.}
+  \label{fig:rpm_vs_cmd}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[tumplot, xlabel={Command [-]}, ylabel={Thrust [N]}, width=0.8\textwidth]
+      \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
+        table[x=cmd, y=force_z_N, col sep=comma]{data/thrust_vs_cmd_data.csv};
+      \addlegendentry{Measured data}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Thrust vs Command showing the direct relationship between motor command and thrust force.}
+  \label{fig:thrust_vs_cmd}
 \end{figure}
 
 \section{Agility and tracking}
