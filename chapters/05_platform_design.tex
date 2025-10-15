@@ -44,9 +44,62 @@ To mitigate this, thin lines were tensioned between neighboring wings to increas
 \subsection{Wing Aerodynamics}
 
 The aerodynamic surfaces were designed for efficient lift generation in the cruise speed range of \SIrange{5}{15}{\meter\per\second}.  
-At a nominal flight velocity of \SI{10}{\meter\per\second} and chord length of \SI{0.25}{\meter}, the expected Reynolds number is on the order of \(1\times10^5\)–\(2\times10^5\), placing the operation in the low-Reynolds transitional regime.  
+At a nominal flight velocity of \SI{10}{\meter\per\second} and chord length of \SI{0.25}{\meter}, the expected Reynolds number is on the order of \(1\times10^5\)–\(2\times10^5\), placing the operation in the low-Reynolds transitional regime.
+
+The Reynolds number characterizes the ratio of inertial to viscous forces and is computed as
+\begin{equation}
+Re = \frac{\rho V c}{\mu} = \frac{V c}{\nu},
+\label{eq:reynolds_number}
+\end{equation}
+where \(\rho\) is the air density, \(V\) is the airspeed, \(c\) is the chord length, \(\mu\) is the dynamic viscosity, and \(\nu\) is the kinematic viscosity of air.
+Using standard atmospheric conditions at sea level (\(\rho = 1.225~\mathrm{kg/m^3}\), \(\nu = 1.4207 \times 10^{-5}~\mathrm{m^2/s}\)) and the wing chord length of \(c = 0.25~\mathrm{m}\), Table~\ref{tab:reynolds_numbers} shows the Reynolds numbers across the operational flight envelope.
+
+\begin{table}[htbp]
+\centering
+\caption{Reynolds numbers for the NACA~0015 wing at various airspeeds with chord length \(c = 0.25~\mathrm{m}\) at sea-level conditions.}
+\label{tab:reynolds_numbers}
+\begin{tabular}{cc}
+\hline
+Airspeed [\si{\meter\per\second}] & Reynolds Number [-] \\
+\hline
+5  & 87,900 \\
+10 & 175,800 \\
+15 & 263,700 \\
+20 & 351,600 \\
+25 & 439,500 \\
+30 & 527,400 \\
+\hline
+\end{tabular}
+\end{table}
+
 At these conditions, the NACA~0015 profile provides a lift coefficient slightly below unity (\(C_L \approx 0.9\)) and a drag coefficient of approximately \(C_D = 0.08\).  
 The target angle of attack in steady cruise was set to around \SI{10}{\degree}.  
+Figure~\ref{fig:naca0015_cl} shows the predicted lift coefficient for the NACA~0015 airfoil at two Reynolds numbers representative of the operating regime, computed using XFLR5 with NCrit=5 to account for free-stream turbulence typical of outdoor flight.
+At the design cruise angle of attack (\(\alpha \approx 10^\circ\)), the airfoil achieves \(C_L \approx 0.9\)--\(1.0\), providing sufficient lift to support the vehicle weight at moderate forward speeds.
+
+\begin{figure}[htbp]
+\centering
+\input{figures/pgfplots_styles.tex}
+\begin{tikzpicture}
+\begin{axis}[
+  tumplot,
+  xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
+  ylabel={Lift Coefficient, $C_L$ [-]},
+  xmin=-90, xmax=90,
+  ymin=-1.5, ymax=1.5,
+  legend pos=north west,
+  grid=major,
+]
+\addplot[tumblue, thick] table[x index=0, y index=1, col sep=comma] {data/Re_100,500_NCrit_5.csv};
+\addlegendentry{$Re=100$}
+\addplot[tumgreen, thick] table[x index=3, y index=4, col sep=comma] {data/Re_100,500_NCrit_5.csv};
+\addlegendentry{$Re=500$}
+\end{axis}
+\end{tikzpicture}
+\caption{Lift coefficient for the NACA~0015 airfoil at two Reynolds numbers as a function of angle of attack, computed using XFLR5 with NCrit=5. The design cruise angle of attack of approximately \SI{10}{\degree} provides \(C_L \approx 0.9\)--\(1.0\) across the operating Reynolds number range.}
+\label{fig:naca0015_cl}
+\end{figure}
+
 Lift and drag forces were estimated using the analytical model introduced earlier,
 \[
 L = \tfrac{1}{2} \rho S C_L(\alpha) \|v_a\|^2, \quad
