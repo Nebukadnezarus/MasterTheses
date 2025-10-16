@@ -2,23 +2,249 @@
 
 \chapter{Control Architecture}\label{chapter:control-architecture}
 
-We design a trajectory-tracking controller combining geometric position/attitude control with Incremental Nonlinear Dynamic Inversion (INDI). Differential flatness provides reference generation. INDI reduces dependence on aerodynamic modeling and handles unmodeled disturbances.
+This chapter presents the flight control system used on the X-wing quadrotor.
+The architecture combines (i) \emph{flatness-based reference generation} for dynamically
+feasible trajectories, (ii) a \emph{geometric outer loop} on $SE(3)$ that turns
+translational tracking errors into desired attitude and collective thrust, and
+(iii) an \emph{Incremental Nonlinear Dynamic Inversion (INDI)} inner loop that
+realizes the requested angular dynamics while rejecting unmodeled aerodynamic
+effects from the wings.
+The wings are \emph{not} explicitly modeled in the controller; instead, their influence
+is treated as a disturbance and compensated incrementally by INDI
+\cite{Smeur2016,Oosedo2017,vanKampen2018,Tzoumanikas2021}.
 
-\section{Reference generation}
-Trajectory references $(\mathbf{p}_d,\dot{\mathbf{p}}_d,\ddot{\mathbf{p}}_d,\psi_d)$ from a flatness-based planner or minimum-snap polynomial, optionally enforcing coordinated-turn constraints in forward flight to bound sideslip.
+\section{Reference Generation}\label{sec:ref-gen}
+Quadrotor dynamics are differentially flat with respect to
+$\mathbf{p}_d=[x_d,y_d,z_d]^\top$ and $\psi_d$.
+We generate $(\mathbf{p}_d,\dot{\mathbf{p}}_d,\ddot{\mathbf{p}}_d,\psi_d)$
+from a minimum-snap polynomial or flatness-based planner; jerk/snap may be used internally
+for smoothness but are not required by the controller interface.
 
-\section{Outer-loop (geometric SE(3))}
-Compute desired body z-axis from force command $\mathbf{f}_d=m(\ddot{\mathbf{p}}_d + \mathbf{k}_p\tilde{\mathbf{p}} + \mathbf{k}_v\tilde{\mathbf{v}} - \mathbf{g})$ and yaw $\psi_d$, yielding desired attitude $R_d$ and thrust $f_T$.
+\paragraph{Coordinated-turn option.}
+In forward flight, sideslip can be bounded by aligning the body $x$-axis with the
+horizontal velocity and setting a yaw-rate reference approximately as
+\begin{equation}
+\dot{\psi}_d \;\approx\; \frac{a_{y,d}}{V_d\cos\theta_d},
+\end{equation}
+where $a_{y,d}$ is the desired lateral acceleration, $V_d=\|\dot{\mathbf{p}}_d\|$, and
+$\theta_d$ the pitch. We use this option when tracking fast, curving
+trajectories; otherwise $\psi_d$ follows a commanded heading.
 
-\section{Inner-loop INDI}
-Using measured specific force and angular rates, INDI updates actuator commands incrementally:
+\section{Geometric Outer Loop}\label{sec:outer}
+The outer loop maps position/velocity errors to a desired attitude $R_d\in SO(3)$
+and a collective thrust $f_{\text{coll}}$.
+
+\subsection{Translational feedback and force target}\label{sec:outer-force}
+Let $\tilde{\mathbf{p}}=\mathbf{p}_d-\mathbf{p}$ and $\tilde{\mathbf{v}}=\dot{\mathbf{p}}_d-\mathbf{v}$.
+With diagonal gains $\mathbf{k}_p,\mathbf{k}_v>0$ (elementwise),
+\begin{equation}
+\mathbf{a}_c \;=\; \mathbf{k}_p\odot\tilde{\mathbf{p}}
+                  \;+\; \mathbf{k}_v\odot\tilde{\mathbf{v}}
+                  \;+\; \ddot{\mathbf{p}}_d \;-\; \mathbf{g},
+\label{eq:ac-nom}
+\end{equation}
+defines the nominal commanded acceleration in the world frame (ENU, $\mathbf{g}=[0,0,-g]^\top$).
+
+\paragraph{Aerodynamic feedforward from onboard sensing.}
+We estimate a body-frame specific force $\mathbf{a}_B$ from the IMU (bias-compensated)
+or a model fallback and low-pass filter it, $\mathbf{a}_{B,f}=\mathrm{LPF}_a(\mathbf{a}_B)$.
+From filtered motor speeds $\boldsymbol{\omega}_m$ we form
+$\mathbf{f}_f = k_t\,\mathrm{LPF}_m(\boldsymbol{\omega}_m^{\circ 2})+\mathbf{b}$,
+so that $f_{T,f}=\mathbf{1}^\top\mathbf{f}_f$.
+A world-frame aero-compensation term follows as
+\begin{equation}
+\mathbf{a}_{\text{aero}} \;=\; R\!\left(\frac{f_{T,f}}{m}\,\mathbf{e}_3 - \mathbf{a}_{B,f}\right),
+\qquad
+\mathbf{a}_c \;\leftarrow\; \mathbf{a}_c + \mathbf{a}_{\text{aero}}
+\;\;\text{if } z>0.5~\mathrm{m}.
+\label{eq:aero-comp-outer}
+\end{equation}
+Intuitively, $R(f_{T,f}\mathbf{e}_3/m)$ is the thrust-induced specific force in the world;
+subtracting the measured specific force yields the unmodeled aero contribution to be
+fed forward.
+
+\subsection{Attitude target and thrust projection}\label{sec:outer-att}
+We set the desired body $z$-axis to the direction of the commanded acceleration,
+$\mathbf{z}_B^d=\mathbf{a}_c/\|\mathbf{a}_c\|$.
+For heading, we prefer a coordinated-turn alignment:
+\[
+\mathbf{x}_c =
+\begin{cases}
+\dot{\mathbf{p}}_d/\|\dot{\mathbf{p}}_d\|, & \|\dot{\mathbf{p}}_d\|>0.2~\mathrm{m/s},\\
+R_z(\psi_d)\,\mathbf{e}_x, & \text{otherwise},
+\end{cases}
+\quad (\mathbf{x}_c)_z=0,\;\|\mathbf{x}_c\|=1.
+\]
+To avoid the degeneracy $\mathbf{z}_B^d\parallel\mathbf{x}_c$, we set
+$\mathbf{x}_c\leftarrow -\mathbf{e}_z$ if $\angle(\mathbf{z}_B^d,\mathbf{x}_c)<5^\circ$.
+Then
+\begin{equation}
+\mathbf{y}_B^d = \frac{\mathbf{z}_B^d\times\mathbf{x}_c}{\|\mathbf{z}_B^d\times\mathbf{x}_c\|},
+\qquad
+\text{flip } \mathbf{y}_B^d \text{ if } (\mathbf{y}_B^d)^\top(R\mathbf{e}_y)<0,
+\qquad
+\mathbf{x}_B^d = \frac{\mathbf{y}_B^d\times\mathbf{z}_B^d}{\|\mathbf{y}_B^d\times\mathbf{z}_B^d\|},
+\end{equation}
+and $R_d=[\,\mathbf{x}_B^d\;\mathbf{y}_B^d\;\mathbf{z}_B^d\,]$.
+We compute collective thrust by projection to reduce transients:
+\begin{equation}
+f_{\text{coll}} \;=\; m\,\mathbf{a}_c^\top (R\mathbf{e}_3).
+\label{eq:thrust-proj}
+\end{equation}
+
+\subsection{Tilt-prioritized attitude control and rate reference}\label{sec:tilt-prio}
+Following the tilt-prioritized design of Föhn (2020), with attitude error
+$q_e=q^{-1}\!\otimes q_d$ and gains $k_{\text{att},xy},k_{\text{att},z}$,
 \begin{align}
-\Delta \mathbf{u} &= G^{-1}\,\big( \mathbf{y}_d - \mathbf{y} \big),
+T_{\text{att}} &= \mathrm{diag}(k_{\text{att},xy},k_{\text{att},xy},k_{\text{att},z}),
+\\
+\mathbf{t}(q_e) &= 
+\begin{bmatrix}
+q_{e,w}q_{e,x}-q_{e,y}q_{e,z}\\
+q_{e,w}q_{e,y}+q_{e,x}q_{e,z}\\
+q_{e,z}
+\end{bmatrix},
+\quad \text{if } q_{e,w}\le 0 \text{ then } t_3\leftarrow -t_3,
+\\
+\boldsymbol{\omega}_d &= \frac{2}{\sqrt{q_{e,w}^2+q_{e,z}^2}}\;T_{\text{att}}\;\mathbf{t}(q_e).
+\label{eq:omega-d}
 \end{align}
-where $\mathbf{y}$ are directly measurable accelerations/attitude-rate related outputs. The key insight is that unmodeled aerodynamics cancel in the increment under small sampling intervals, leaving a local input-output mapping identified online via control effectiveness. See \cite{Smeur2016, Oosedo2017, vanKampen2018} and \cite{Tzoumanikas2021} for agile INDI on aerial platforms.
+A simple rate-plus-error form produces an \emph{angular-acceleration proxy}
+for INDI:
+\begin{equation}
+\boldsymbol{\alpha}_d \;=\; \boldsymbol{\omega}_d \;+\; 
+\mathbf{k}_{\text{rate}}\odot(\boldsymbol{\omega}_d-\boldsymbol{\omega}).
+\label{eq:alpha-d}
+\end{equation}
+We forward $(R_d,f_{\text{coll}},\boldsymbol{\alpha}_d)$ to the inner loop.
 
-\subsection{Aerodynamic cancellation argument}
-Let $\dot{\mathbf{y}}=f(\cdot)+B\,\mathbf{u}+\mathbf{d}$ with disturbance/aerodynamics $\mathbf{d}$. Over short intervals $\Delta t$, the change satisfies $\Delta \mathbf{y} \approx B\,\Delta\mathbf{u}$ as $\Delta \mathbf{d}$ is second-order. Thus the incremental control law does not require explicit aerodynamic parameters.
+\section{INDI Inner Loop}\label{sec:indi}
+The inner loop realizes the requested rotational dynamics robustly without an explicit
+aerodynamic model. Over a small sampling interval $\Delta t$, the change in the measured
+output $\mathbf{y}$ (specific force or angular acceleration proxy) satisfies
+\begin{equation}
+\Delta\mathbf{y} \;\approx\; B\,\Delta\mathbf{u},
+\end{equation}
+with $B$ the (local) control-effectiveness matrix and $\Delta\mathbf{d}$ (disturbance change)
+second order in $\Delta t$; hence the incremental update largely cancels unmodeled
+aerodynamics \cite{Smeur2016,Oosedo2017,vanKampen2018,Tzoumanikas2021}.
 
-\section{Coordinated turn option}
-Impose sideslip $\beta\approx0$ by aligning drag with body-x projected velocity and setting a yaw rate command consistent with lateral acceleration: $\dot{\psi}\approx a_y/(V\cos\theta)$ at moderate bank angles.
+\subsection{Measured/filtered quantities}\label{sec:indi-sensed}
+We use gyroscope rates $\boldsymbol{\omega}$ and their filtered derivative as an acceleration proxy,
+\begin{equation}
+\dot{\boldsymbol{\omega}}_f \;=\; \frac{\mathrm{d}}{\mathrm{d}t}\big(\mathrm{LPF}_\omega(\boldsymbol{\omega})\big),
+\end{equation}
+and reconstruct filtered rotor thrusts from motor speeds as in \eqref{eq:aero-comp-outer}. The
+filtered rotor moments follow from the allocation matrix $G$:
+\begin{equation}
+\begin{bmatrix} f_{T,f}\\ \boldsymbol{\tau}_f \end{bmatrix} \;=\; G\,\mathbf{f}_f.
+\label{eq:tau-f}
+\end{equation}
+
+\subsection{Nominal NDI versus incremental INDI moments}\label{sec:ndi-vs-indi}
+Let $\boldsymbol{\mu}=[\mu_0,\mu_x,\mu_y,\mu_z]^\top=[f_T,\tau_x,\tau_y,\tau_z]^\top$.
+We form two moment requests:
+\begin{align}
+\boldsymbol{\mu}_{\text{NDI}} &=
+\begin{bmatrix}
+m\,f_{\text{coll}}\\
+(J\boldsymbol{\alpha}_d + \boldsymbol{\omega}\times J\boldsymbol{\omega})_x\\
+(J\boldsymbol{\alpha}_d + \boldsymbol{\omega}\times J\boldsymbol{\omega})_y\\
+(J\boldsymbol{\alpha}_d + \boldsymbol{\omega}\times J\boldsymbol{\omega})_z
+\end{bmatrix},
+\label{eq:mu-ndi}\\
+\boldsymbol{\mu}_{\text{INDI}} &=
+\begin{bmatrix}
+m\,f_{\text{coll}}\\
+\boldsymbol{\tau}_f + J\big(\boldsymbol{\alpha}_d - \dot{\boldsymbol{\omega}}_f\big)
+\end{bmatrix}.
+\label{eq:mu-indi}
+\end{align}
+Equation~\eqref{eq:mu-indi} is the incremental update: the moment change uses the mismatch
+between desired and measured angular accelerations, injecting the \emph{measured} effectiveness
+$J$ and $\boldsymbol{\tau}_f$.
+
+\paragraph{Yaw-stability tweak.}
+To avoid yaw oscillations observed in practice, we blend the two requests and set
+\begin{equation}
+\mu_z \;\leftarrow\; (\boldsymbol{\mu}_{\text{NDI}})_z,
+\end{equation}
+while keeping roll/pitch from \eqref{eq:mu-indi}.
+
+\paragraph{Mode switch at low altitude.}
+For takeoff and near-ground operation we disable INDI and use
+$\boldsymbol{\mu}\leftarrow\boldsymbol{\mu}_{\text{NDI}}$ if $z<0.5$~m or a configuration flag is off.
+
+\subsection{Update to rotor thrusts}\label{sec:indi-to-rotors}
+With the inverse allocation matrix $G^{-1}$ (precomputed from geometry, including motor tilt),
+the commanded rotor thrusts are
+\begin{equation}
+\mathbf{u} \;=\; G^{-1}\,\boldsymbol{\mu},
+\qquad f_T=\mathbf{1}^\top\mathbf{u}.
+\label{eq:indi-allocation}
+\end{equation}
+Each rotor thrust maps to speed via the quadratic thrust curve,
+\begin{equation}
+f_i \;=\; k_t\,\omega_i^2 \;+\; b_i,
+\qquad
+\omega_i \;=\; \sqrt{\max(0,(f_i-b_i)/k_t)}.
+\label{eq:thrust-map}
+\end{equation}
+Commands are sent to the ESCs (DShot). Saturation and safety guards are applied at the actuation layer.
+
+\section{Control Allocation and Constraints}\label{sec:allocation}
+The allocation matrix $G\in\mathbb{R}^{4\times 4}$ maps individual rotor thrusts to total thrust
+and body moments,
+\begin{equation}
+\boldsymbol{\mu}=G\,\mathbf{u},
+\qquad
+\mathbf{u}=[f_1,f_2,f_3,f_4]^\top,
+\end{equation}
+and encodes the arm geometry and $\SI{5}{\degree}$ motor tilt (see Chapter~\ref{chapter:experimental-setup}).
+We use its inverse for real-time mapping \eqref{eq:indi-allocation}.
+Commanded thrusts are clipped to $f_i\in[f_{\min},f_{\max}]$ and total thrust is bounded for hardware safety.
+(When needed, a constrained least-squares allocator can replace $G^{-1}$ to enforce non-negativity and torque bounds.)
+
+\section{Implementation Notes}\label{sec:impl-notes}
+\paragraph{Filtering.}
+First-order low-pass filters $\mathrm{LPF}_a,\mathrm{LPF}_\omega,\mathrm{LPF}_m$ use cutoffs
+chosen below the control bandwidth to avoid amplifying sensor noise in $\dot{\boldsymbol{\omega}}_f$.
+All filters are tuned consistently across the outer/inner loops.
+
+\paragraph{Sensing and fusion.}
+The controller runs with IMU rates at high frequency; position/velocity references come from Vicon or onboard state estimation.
+Delays are kept small by using incremental updates; no explicit delay compensation was required.
+
+\paragraph{Scheduling.}
+The inner INDI loop runs faster than the outer geometric loop (rate separation).
+Allocation and motor mapping execute at the inner-loop rate.
+
+\paragraph{Logging and health.}
+We log $\boldsymbol{\omega},\dot{\boldsymbol{\omega}}_f,\mathbf{f}_f,\boldsymbol{\tau}_f$ and the residual
+$\boldsymbol{\tau}_f - J\dot{\boldsymbol{\omega}}_f - \boldsymbol{\omega}\times J\boldsymbol{\omega}$ to monitor effectiveness.
+Guard checks reject invalid states or setpoints.
+
+\section{Tuning Guidance}\label{sec:tuning}
+\begin{itemize}
+  \item \textbf{Outer loop} $\mathbf{k}_p,\mathbf{k}_v$: increase until overshoot appears in step tests, then back off; clip $\tilde{\mathbf{p}},\tilde{\mathbf{v}}$ to limit transients.
+  \item \textbf{Attitude gains} $k_{\text{att},xy},k_{\text{att},z}$: prioritize $x$–$y$ for agility; keep $k_{\text{att},z}$ smaller to avoid yaw chatter.
+  \item \textbf{Rate gains} $\mathbf{k}_{\text{rate}}$: start small; raise until $\dot{\boldsymbol{\omega}}_f$ tracks $\boldsymbol{\alpha}_d$ with minimal lag.
+  \item \textbf{Filters}: set cutoffs so that $\dot{\boldsymbol{\omega}}_f$ is smooth but responsive; align motor-speed and accelerometer filter cutoffs.
+  \item \textbf{Allocation}: verify $G$ from CAD (arm length, tilt, motor spin) and validate $G^{-1}$ via static torque tests.
+\end{itemize}
+
+\section{Summary}\label{sec:ctrl-summary}
+The proposed control system stacks a geometric $SE(3)$ outer loop with an INDI inner loop.
+The outer loop produces $(R_d,f_{\text{coll}},\boldsymbol{\alpha}_d)$ by combining
+proportional–derivative translational feedback with an aero feedforward term from onboard sensing,
+and a coordinated-turn attitude construction.
+The INDI layer then incrementally inverts the rotational dynamics using measured effectiveness,
+blending a nominal NDI yaw to suppress oscillations.
+This architecture achieves robust tracking across hover and forward-flight regimes while compensating
+for the unmodeled aerodynamic influence of the X-wing surfaces.
+
+% --- References used in this chapter ---
+% Add to your .bib if not already present:
+% \cite{Smeur2016,Oosedo2017,vanKampen2018,Tzoumanikas2021}
+% (Optionally add Föhn 2020 for tilt-prioritized attitude control.)
+

@@ -2,28 +2,92 @@
 
 \chapter{Dynamics Model}\label{chapter:dynamics-model}
 
-We derive a 6-DoF rigid-body model of the platform with rotor thrust/torque and simplified aerodynamic forces/moments from the integrated wings.
+This chapter introduces the six-degree-of-freedom (6-DoF) rigid-body model used to describe the motion of the X-wing quadrotor platform. The formulation captures the essential translational and rotational dynamics with lumped aerodynamic effects from the integrated wing surfaces. The model is intended to provide a physically consistent basis for later control design and parameter identification.
 
-\section{Frames, states, and inputs}
-States: $(\mathbf{p},\mathbf{v},R,\boldsymbol{\omega}) \in \mathbb{R}^3\times\mathbb{R}^3\times SO(3)\times\mathbb{R}^3$. Inputs: rotor thrusts $\mathbf{u}=[f_1,\dots,f_4]^\top$ (or RPM), combined into total thrust $f_T$ and body torques $\boldsymbol{\tau}$ by allocation matrix $G$.
+\section{Coordinate Frames and States}
+The equations of motion are expressed in the world (inertial) and body-fixed frames.
 
-\section{Forces and moments}
-- Gravity: $m\mathbf{g}$.
-- Rotor thrust in body z: $\mathbf{F}_T = -f_T\, R\mathbf{e}_3$ (world frame).
-- Aerodynamics (simplified): wing lift and drag quadratic in body-frame airspeed $\mathbf{v}_a = \mathbf{v} - \mathbf{v}_w$ transformed to the body.
-  \begin{align}
-  L &= \tfrac{1}{2}\rho S C_L(\alpha) \|\mathbf{v}_a\|^2, & D &= \tfrac{1}{2}\rho S C_D(\alpha) \|\mathbf{v}_a\|^2.
-  \end{align}
-We use $C_L=a_\alpha\alpha$, $C_D=C_{D0}+kC_L^2$ or the compact quadratic form $\mathbf{F}_\text{aero} = -k_D\,\|\mathbf{v}_a\|\,\mathbf{v}_a + k_L\,\|\mathbf{v}_a\|\,\mathbf{v}_{\perp}$ with $\mathbf{v}_{\perp}$ orthogonal to the surface.
+\begin{itemize}
+    \item The \textbf{world frame} follows the ENU convention, with gravity $\mathbf{g} = [0,\,0,\,-g]^\top$.
+    \item The \textbf{body frame} is located at the vehicle's center of gravity (CoG), with the $x$-axis pointing forward, $y$-axis to the left, and $z$-axis upward, normal to the rotor plane.
+\end{itemize}
 
-Moments from aerodynamic center offset and rotor torques are aggregated into $\boldsymbol{\tau}=G_\tau\,\mathbf{u} + \boldsymbol{\tau}_\text{aero}$.
+The system states are
+\begin{equation}
+(\mathbf{p},\,\mathbf{v},\,R,\,\boldsymbol{\omega}) 
+    \in \mathbb{R}^3 \times \mathbb{R}^3 \times SO(3) \times \mathbb{R}^3,
+\end{equation}
+where $\mathbf{p}$ and $\mathbf{v}$ denote position and linear velocity in the world frame, $R \in SO(3)$ is the rotation matrix from body to world frame, and $\boldsymbol{\omega}$ is the body angular velocity.  
+The control inputs are the individual rotor thrusts
+\begin{equation}
+\mathbf{u} = [f_1,\,f_2,\,f_3,\,f_4]^\top,
+\end{equation}
+each acting approximately along the body $+z$ direction.  
+Explicit control allocation and motor dynamics are treated in Chapter~\ref{chapter:control-architecture}.
 
-\section{Equations of motion}
+\section{Forces}
+The total force acting on the vehicle in the world frame is the sum of gravity, rotor thrust, and aerodynamic forces:
+\begin{equation}
+\mathbf{F} = m\mathbf{g} + \mathbf{F}_T + R\,\mathbf{F}_\text{aero}.
+\end{equation}
+
+\subsection{Gravity}
+The gravitational force is given by $m\mathbf{g}$ with $m$ the total mass of the system.
+
+\subsection{Rotor Thrust}
+Each rotor $i$ produces a thrust $f_i$ approximately aligned with the body $+z$ axis.  
+The total thrust in the world frame is
+\begin{equation}
+\mathbf{F}_T = \bigg(\sum_{i=1}^{4} f_i\bigg) R\,\mathbf{e}_3.
+\end{equation}
+
+\subsection{Aerodynamic Forces}
+The fixed aerodynamic surfaces generate lift and drag forces that depend on the body-frame airspeed
+\begin{equation}
+\mathbf{v}_a = R^\top(\mathbf{v} - \mathbf{v}_w),
+\end{equation}
+where $\mathbf{v}_w$ is the wind velocity in the world frame.  
+For design and performance estimation, the aerodynamic forces are computed using standard expressions:
 \begin{align}
-\dot{\mathbf{p}} &= \mathbf{v},\\
-\dot{\mathbf{v}} &= \tfrac{1}{m}\big( m\mathbf{g} + \mathbf{F}_T + R\,\mathbf{F}_\text{aero} \big),\\
-\dot{R} &= R\,[\boldsymbol{\omega}]_\times,\\
-J\dot{\boldsymbol{\omega}} &= -\boldsymbol{\omega}\times J\boldsymbol{\omega} + \boldsymbol{\tau}.
+L &= \tfrac{1}{2}\rho S C_L(\alpha) \|\mathbf{v}_a\|^2, & D &= \tfrac{1}{2}\rho S C_D(\alpha) \|\mathbf{v}_a\|^2,
 \end{align}
+where $\rho$ is air density, $S$ is the total wing area, and $C_L(\alpha)$ and $C_D(\alpha)$ are the lift and drag coefficients as functions of angle of attack $\alpha$.
+We use the approximations $C_L = a_\alpha \alpha$ and $C_D = C_{D0} + k C_L^2$ to estimate the wing contributions during the platform design phase.
 
-Assumptions: quasi-steady aerodynamics, negligible prop-wash coupling in first-order model, parameter lumping for identification.
+However, these aerodynamic forces are \textbf{not explicitly modeled in the controller}.
+Instead, they are treated as external disturbances that are automatically rejected by the incremental nonlinear dynamic inversion (INDI) controller presented in Chapter~\ref{chapter:control-architecture}.
+This approach avoids the need for precise aerodynamic parameter identification or online angle-of-attack estimation, relying on the controller's inherent robustness to unmodeled dynamics.
+
+\section{Moments}
+The moments acting on the vehicle are composed of rotor-generated torques and lumped aerodynamic moments:
+\begin{equation}
+\boldsymbol{\tau} = \boldsymbol{\tau}_T + \boldsymbol{\tau}_\text{aero}.
+\end{equation}
+The rotor moments $\boldsymbol{\tau}_T$ arise from thrust lever arms and counter-torques of the propellers, while $\boldsymbol{\tau}_\text{aero}$ accounts for small contributions from the aerodynamic center offset and asymmetric lift distribution.
+The detailed mapping from individual rotor thrusts to force and moments (control allocation) is treated in Chapter~\ref{chapter:control-architecture}.
+
+\section{Equations of Motion}
+The rigid-body dynamics of the vehicle are expressed as
+\begin{align}
+\dot{\mathbf{p}} &= \mathbf{v}, \\
+\dot{\mathbf{v}} &= \tfrac{1}{m}\big( m\mathbf{g} + \mathbf{F}_T + R\,\mathbf{F}_\text{aero} \big), \\
+\dot{R} &= R[\boldsymbol{\omega}]_\times, \\
+J\dot{\boldsymbol{\omega}} &= -\boldsymbol{\omega}\times J\boldsymbol{\omega} + \boldsymbol{\tau},
+\end{align}
+where $J$ is the inertia matrix expressed in the body frame, and $[\boldsymbol{\omega}]_\times$ denotes the skew-symmetric matrix representation of the cross product.
+
+\section{Assumptions and Simplifications}
+The following assumptions are made to keep the model tractable:
+\begin{itemize}
+    \item Quasi-steady aerodynamics; unsteady and dynamic-stall effects are neglected.
+    \item No prop-wash coupling or aerodynamic interference between rotors and wings.
+    \item Symmetric mass and inertia distribution with negligible structural flexibility.
+    \item Fixed-pitch rotors; gyroscopic and blade flapping effects are ignored.
+    \item Aerodynamic forces and moments are treated as lumped, quasi-linear disturbances for identification.
+\end{itemize}
+
+\section{Remarks}
+The presented model provides a concise yet comprehensive description of the platform's motion.  
+It captures the key couplings between thrust, gravity, and aerodynamic effects while remaining simple enough for real-time simulation and control.  
+In later chapters, this model forms the foundation for the geometric and incremental nonlinear dynamic inversion (INDI) control strategies, which compensate for the unmodeled aerodynamic disturbances in flight.
+
