@@ -224,15 +224,6 @@ We log $\boldsymbol{\omega},\dot{\boldsymbol{\omega}}_f,\mathbf{f}_f,\boldsymbol
 $\boldsymbol{\tau}_f - J\dot{\boldsymbol{\omega}}_f - \boldsymbol{\omega}\times J\boldsymbol{\omega}$ to monitor effectiveness.
 Guard checks reject invalid states or setpoints.
 
-\section{Tuning Guidance}\label{sec:tuning}
-\begin{itemize}
-  \item \textbf{Outer loop} $\mathbf{k}_p,\mathbf{k}_v$: increase until overshoot appears in step tests, then back off; clip $\tilde{\mathbf{p}},\tilde{\mathbf{v}}$ to limit transients.
-  \item \textbf{Attitude gains} $k_{\text{att},xy},k_{\text{att},z}$: prioritize $x$–$y$ for agility; keep $k_{\text{att},z}$ smaller to avoid yaw chatter.
-  \item \textbf{Rate gains} $\mathbf{k}_{\text{rate}}$: start small; raise until $\dot{\boldsymbol{\omega}}_f$ tracks $\boldsymbol{\alpha}_d$ with minimal lag.
-  \item \textbf{Filters}: set cutoffs so that $\dot{\boldsymbol{\omega}}_f$ is smooth but responsive; align motor-speed and accelerometer filter cutoffs.
-  \item \textbf{Allocation}: verify $G$ from CAD (arm length, tilt, motor spin) and validate $G^{-1}$ via static torque tests.
-\end{itemize}
-
 \section{Summary}\label{sec:ctrl-summary}
 The proposed control system stacks a geometric $SE(3)$ outer loop with an INDI inner loop.
 The outer loop produces $(R_d,f_{\text{coll}},\boldsymbol{\alpha}_d)$ by combining

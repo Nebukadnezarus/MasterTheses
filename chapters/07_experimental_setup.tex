@@ -12,7 +12,7 @@ This section documents the hardware configuration, software stack, and test faci
 \subsubsection{Airframe and Propulsion}
 The experimental platform consists of an X-wing aerodynamic surface-enhanced quadrotor (Fig.~\ref{fig:xwing_platform}) with a total mass of \SI{2.5}{\kilogram} (without batteries: \SI{1.75}{\kilogram}). Each of the four T-MOTOR VELOX~V2808 motors produces a maximum static thrust of approximately \SI{22}{\newton}, resulting in a total available thrust of \SI{88}{\newton} and a thrust-to-weight ratio of 3.59 at nominal \SI{22.2}{\volt} (6S~LiPo). The propulsion system employs HQProp 7×3.5×3 three-blade racing propellers optimized for medium–high efficiency in the forward-flight regime.
 
-The wings feature a NACA~0015 airfoil with a span of \SI{450}{\milli\meter} and a chord of \SI{250}{\milli\meter}. Four identical fixed wings are arranged orthogonally (\SI{90}{\degree} between adjacent wings) and mounted with alternating dihedral and anhedral angles of $\pm\SI{45}{\degree}$. The wings are attached to the central frame using two carbon spars (\SI{10}{\milli\meter} outer diameter) clamped into the core structure, allowing for fast removal. The center frame and motor mounts are 3D-printed from standard PLA, while the wing surfaces are printed from lightweight PLA~Aero. The total projected horizontal area of all wings is approximately $S_\mathrm{t} = 0.318~\si{\meter\squared}$.
+The wings feature a NACA~0015 airfoil with a length of \SI{450}{\milli\meter} and a chord of \SI{250}{\milli\meter}. Four identical fixed wings are arranged orthogonally (\SI{90}{\degree} between adjacent wings) and mounted with alternating dihedral and anhedral angles of $\pm\SI{45}{\degree}$. The wings are attached to the central frame using two carbon spars (\SI{10}{\milli\meter} outer diameter) clamped into the core structure, allowing for fast removal. The center frame and motor mounts are 3D-printed from standard PLA, while the wing surfaces are printed from lightweight PLA~Aero. The total projected horizontal area of all wings is approximately $S_\mathrm{t} = 0.318~\si{\meter\squared}$.
 
 Each motor is mounted with a \SI{5}{\degree} tilt to improve yaw authority. The center of gravity is located at the geometric center of the vehicle, aligned with the midpoint between all four motors, and approximately at one quarter of the wing chord length from the leading edge.
 
@@ -27,11 +27,39 @@ Each motor is mounted with a \SI{5}{\degree} tilt to improve yaw authority. The 
 \begin{minipage}[b]{0.48\textwidth}
     \centering
     \includegraphics[width=\textwidth,angle=-90]{figures/drone_wing_flight.jpg}
-    \caption*{(b) Side view showing alternating dihedral/anhedral wing angles.}
+    \caption*{(b) Side view showing forward flight orientation.}
 \end{minipage}
 \caption{The experimental X-wing aerodynamic surface-enhanced quadrotor platform.}
 \label{fig:xwing_platform}
 \end{figure}
+
+\subsubsection{Platform Variants}
+Two variants of the X-wing platform were used for efficiency experiments. The baseline platform (described above and shown in Fig.~\ref{fig:xwing_platform}) served as the primary testbed for control development and initial efficiency characterization. 
+
+An improved variant with modified aerodynamic characteristics was developed by [Colleague Name]\footnote{[Colleague Full Name], Bachelor thesis, [Lab Name], [Year]. The improved design builds upon the baseline platform and incorporates aerodynamic refinements.} and employed for comparative efficiency measurements. The improved variant features a different airfoil profile and modified dihedral angles optimized for enhanced lift-to-drag performance in forward flight. All other subsystems—propulsion, avionics, mass, and control architecture—remain identical between both platforms, allowing for direct aerodynamic comparison.
+
+Table~\ref{tab:platform_comparison} summarizes the key differences between the two variants.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of baseline and improved X-wing platform variants.}
+\label{tab:platform_comparison}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Parameter & Baseline Platform & Improved Platform \\
+\midrule
+Airfoil & NACA~0015 & ag25 \\
+Dihedral/Anhedral & $\pm\SI{45}{\degree}$ (alternating) & $\pm\SI{20}{\degree}$ (alternating) \\
+Wing Length & \SI{450}{\milli\meter} & \SI{500}{\milli\meter} \\
+Wing Chord & \SI{250}{\milli\meter} & \SI{230}{\milli\meter} \\
+Motor Tilt (Yaw Authority) & $\pm\SI{5}{\degree}$ & $\pm\SI{5}{\degree}$ \\
+Total Mass & \SI{2.5}{\kilogram} & \SI{2.2}{\kilogram} \\
+Propulsion & T-MOTOR VELOX~V2808 + HQProp 7×3.5×3 & Identical \\
+Avionics & Kakute~H7 + Jetson Orin Nano & Identical \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsubsection{Thrust Characterization and Command Mapping}
 To accurately relate motor command inputs to generated thrust, a static thrust characterization was performed for the chosen motor–propeller configuration.  
@@ -47,16 +75,24 @@ The setup allowed precise measurement of the vertical force while commanding the
     % Adjust these coordinates to point to the correct components
     
     % Motor at the top
-    \draw[->,thick,TUMBlue,line width=2.5pt] (0.5,0.85) -- (0.4,0.8);
-    \node[TUMBlue,font=\normalsize,fill=white,fill opacity=0.85,text opacity=1,inner sep=2pt] at (0.5,0.9) {Motor};
+    \draw[->,thick,TUMBlue,line width=4pt] (0.5,0.85) -- (0.4,0.8);
+    \node[TUMBlue,font=\normalsize,fill=white,fill opacity=0.85,text opacity=1,inner sep=5pt] at (0.5,0.9) {Motor};
     
     % Force sensor (Rokubi Mini - cylindrical part)
-    \draw[->,thick,TUMBlue,line width=2.5pt] (0.2,0.35) -- (0.3,0.45);
-    \node[TUMBlue,font=\normalsize,align=center,fill=white,fill opacity=0.85,text opacity=1,inner sep=2pt] at (0.2,0.3) {Rokubi Mini\\Force Sensor};
+    \draw[->,thick,TUMBlue,line width=4pt] (0.2,0.35) -- (0.3,0.45);
+    \node[TUMBlue,font=\normalsize,align=center,fill=white,fill opacity=0.85,text opacity=1,inner sep=5pt] at (0.2,0.3) {Rokubi Mini\\Force Sensor};
     
     % Battery (visible in lower portion)
-    \draw[->,thick,TUMBlue,line width=2.5pt] (0.25,0.15) -- (0.35,0.2);
-    \node[TUMBlue,font=\normalsize,fill=white,fill opacity=0.85,text opacity=1,inner sep=2pt] at (0.15,0.15) {Battery};
+    \draw[->,thick,TUMBlue,line width=4pt] (0.25,0.15) -- (0.35,0.2);
+    \node[TUMBlue,font=\normalsize,fill=white,fill opacity=0.85,text opacity=1,inner sep=5pt] at (0.15,0.15) {Battery};
+
+    % Jetson (visible in lower portion)
+    \draw[->,thick,TUMBlue,line width=4pt] (0.75,0.6) -- (0.65,0.5);
+    \node[TUMBlue,font=\normalsize,fill=white,fill opacity=0.85,text opacity=1,inner sep=5pt] at (0.75,0.65) {Jetson};
+
+    % FC and ESC (visible in lower portion)
+    \draw[->,thick,TUMBlue,line width=4pt] (0.7,0.2) -- (0.55,0.3);
+    \node[TUMBlue,font=\normalsize,fill=white,fill opacity=0.85,text opacity=1,inner sep=5pt] at (0.7,0.2) {FC and ESC};
 \end{scope}
 \end{tikzpicture}
 \caption{Static thrust characterization test stand with motor mounted on Rokubi~Mini force–torque sensor.}
@@ -92,7 +128,7 @@ A custom-modified version of \textit{Betaflight} firmware was employed on the fl
 Category & Component & Model / Key Specs \\
 \midrule
 Airframe & Frame & X-wing center frame with carbon wing spars \\
-Airframe & Wings & Four fixed wings (each 450\,×\,250\,mm; NACA~0015 airfoil), orthogonal layout ($90^{\circ}$ between adjacent wings); skins: Bambu Lab PLA Aero; spars: 10\,mm OD carbon tubes; total projected horizontal area $S_\mathrm{t}\approx 0.318$\,m$^2$ \\
+Airframe & Wings & Four fixed wings (length 450\,mm, chord 250\,mm; NACA~0015 airfoil), orthogonal layout ($90^{\circ}$ between adjacent wings); skins: Bambu Lab PLA Aero; spars: 10\,mm OD carbon tubes; total projected horizontal area $S_\mathrm{t}\approx 0.318$\,m$^2$ \\
 Propulsion & Motors ($\times$4) & T-MOTOR VELOX~V2808, max~22\,N each \\
 Propulsion & Propellers ($\times$4) & HQProp 7\,×\,3.5\,×\,3, 3-blade racing propeller (7", light grey) \\
 Avionics & FC+ESC & Kakute~H7~v1.5 Stack (4-in-1~ESC) \\

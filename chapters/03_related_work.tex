@@ -56,14 +56,6 @@ These works collectively show that adding lifting/streamlining surfaces to a qua
 Importantly, the canonical quadrotor controller stack (geometric/differential-flatness + INDI inner loop) remains applicable, maintaining excellent tracking ($\sim$few-cm RMS) and high gust robustness documented for agile quads~\cite{Tal2018,Foehn2022,Sun2021}.
 
 
-\section{Shrouds and Ducts as Augmentation}
-
-Shrouding improves hover power loading and can protect the rotors.
-MDPI Drones studies report $\sim$15--28\% improvements in lift and ``FM efficiency'' for optimized ducted multi-propeller configurations in hover~\cite{Li2021}.
-Classic MAV shroud experiments show up to $\sim$30\% power-loading gains at small scales~\cite{Hrishikeshavan2014}, and broader surveys note up to $>$50\% thrust gains or equivalent power reductions in hover for well-designed ducts, but performance degrades at higher advance ratios (forward flight) due to inlet losses and added frontal area~\cite{Chew2021,Pereira2008}.
-Thus, shrouds are advantageous for hover/low-speed efficiency and safety but can hurt high-speed efficiency and cross-wind agility---less aligned with our ``agile forward-flight efficiency'' goal.
-
-
 \section{Quantitative Comparison Across Criteria}
 
 From the studies above:
@@ -75,7 +67,6 @@ Quadplanes/tilt designs: agility is generally lower in hover due to added inerti
 
 \paragraph{Efficiency (forward flight)}
 Fixed wings/airfoils on quads reduce cruise power by $\sim$20--50\% at 10--15\,m/s~\cite{Dawkins2018,Xiao2020,Freitas2025}.
-Shrouds: +15--30\% hover power loading, but often worse at higher advance ratios~\cite{Li2021,Hrishikeshavan2014,Chew2021}.
 Hybrids (tilt/quadplane/tailsitter) achieve fixed-wing-like J/m at cruise but pay complexity/weight penalties.
 
 \paragraph{Controllability \& transitions}
@@ -87,7 +78,7 @@ INDI-based quads show strong disturbance rejection without precise aero models~\
 Hybrids can be robust, but robustness proofs and quantitative gust testing during transition remain sparse.
 
 \paragraph{Implementation complexity}
-Adding fixed surfaces is mechanically trivial and controller-agnostic; shrouds add structure and possible crosswind penalties; hybrids add mechanisms, sensors, and software complexity (e.g., NMPC with switching and detailed aerodynamics).
+Adding fixed surfaces is mechanically trivial and controller-agnostic; hybrids add mechanisms, sensors, and software complexity (e.g., NMPC with switching and detailed aerodynamics).
 
 
 \section{Gaps and Open Issues}

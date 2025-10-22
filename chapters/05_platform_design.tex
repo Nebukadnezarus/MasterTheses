@@ -41,6 +41,61 @@ No structural asymmetries or significant vibrations were observed during geometr
 However, when using the INDI controller, elastic wing vibrations appeared in the IMU data.  
 To mitigate this, thin lines were tensioned between neighboring wings to increase stiffness and shift the dominant resonance frequency upward, improving signal filtering and control stability.
 
+\subsection{Wing Structure and Manufacturing}
+
+The wings were designed for additive manufacturing using fused deposition modeling (FDM) with PLA~Aero filament, which provides a favorable balance between low density, printability, and structural integrity.
+Each wing features a hollow internal structure optimized to minimize mass while maintaining sufficient bending stiffness.
+
+\paragraph{Internal structure.}
+Figure~\ref{fig:wing_structure} shows the internal geometry of a single wing.
+The NACA~0015 airfoil shell provides aerodynamic smoothness while keeping the structural mass low through a hollow internal cavity.
+Internal ribs and supports are arranged to transfer loads from the aerodynamic surface to two parallel carbon fiber spars running spanwise through the wing.
+The hollow core reduces the wing mass significantly compared to a solid print while providing channels for the \SI{10}{\milli\meter} diameter carbon spars that contribute the majority of the bending stiffness.
+Each wing consists of two printed sections totaling approximately \SI{130}{\gram}, reinforced by two carbon fiber spars at approximately \SI{23}{\gram} each, resulting in a total wing mass of approximately \SI{176}{\gram} per wing.
+This hybrid design—3D-printed aerodynamic shell with carbon reinforcement—achieves a favorable strength-to-weight ratio essential for minimizing inertia while maintaining structural integrity.
+
+\paragraph{Manufacturing and assembly.}
+Each wing is printed using vase mode (spiralize outer contour), which produces a single continuous spiral wall without retractions throughout the print.
+This approach is particularly effective with PLA~Aero filament, which exhibits foaming behavior that leads to poor retraction performance and excessive stringing in conventional printing modes.
+By eliminating retractions entirely, vase mode produces a clean, smooth aerodynamic surface with consistent wall thickness.
+The wings are sliced and oriented vertically in the build volume to align the continuous spiral with the spanwise direction.
+The two carbon spars are clamped into the printed channels using a central core structure, eliminating the need for adhesives and enabling rapid part replacement for testing and repair.
+The motor mounting legs and landing feet are printed separately using conventional settings and mechanically attached to the wing structure.
+
+Each wing is capped with an endcap component (Figure~\ref{fig:wing_foot}) that serves multiple functions: it closes the hollow wing structure, provides mounting points for the motors positioned ahead of the leading edge, and extends downward to form landing feet that protect the wing trailing edges during ground contact.
+This integrated design consolidates three separate functions into a single 3D-printed part, simplifying assembly and reducing the total part count.
+The motor mounting angle includes a \(\pm\SI{5}{\degree}\) tilt to enable differential thrust for yaw control.
+
+The central core (Figure~\ref{fig:core_structure}) serves as the primary structural hub that clamps all carbon spars and houses the critical electronics.
+Two identical cores are used: one for the four upper spars and one for the four lower spars.
+This identical design simplifies manufacturing and allows the same printed part to be used for both top and bottom assemblies.
+The top core houses the electronic speed controllers (ESC), flight controller (FC), and batteries, positioning them near the center of mass for optimal weight distribution, while the bottom core serves purely as a structural clamp for the lower spars.
+A snap-on lid covers the top core, providing additional structural stiffness, protecting the electronics, and forming a flat mounting base for the batteries.
+This modular clamping architecture allows individual wings or carbon spars to be quickly exchanged without disassembly of the entire airframe.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\linewidth]{figures/wing_transparent.png}
+\hfill
+\includegraphics[width=0.48\linewidth]{figures/wing_sliced.png}
+\caption{Wing structure and manufacturing: (left) CAD model showing the hollow internal geometry with channels for carbon fiber spars, (right) sliced preview in vase mode showing the continuous spiral toolpath that eliminates retractions and produces a clean aerodynamic surface.}
+\label{fig:wing_structure}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[height=0.4\linewidth]{figures/foot.png}
+\caption{Wing endcap component serving as motor mount and landing foot. This multi-functional part closes the hollow wing structure, positions the motor ahead of the leading edge with a \(\pm\SI{5}{\degree}\) tilt for yaw control, and extends downward to protect the wing trailing edge during landing.}
+\label{fig:wing_foot}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\linewidth]{figures/core.png}
+\caption{Central core structure that clamps the carbon fiber spars. Two identical cores are used for ease of manufacturing: one houses the ESC, flight controller, and batteries (top), while the other serves as a structural clamp for the lower spars (bottom). A snap-on lid (not shown) covers the top core for additional stiffness and battery mounting.}
+\label{fig:core_structure}
+\end{figure}
+
 \subsection{Wing Aerodynamics}
 
 The aerodynamic surfaces were designed for efficient lift generation in the cruise speed range of \SIrange{5}{15}{\meter\per\second}.  
@@ -52,53 +107,12 @@ Re = \frac{\rho V c}{\mu} = \frac{V c}{\nu},
 \label{eq:reynolds_number}
 \end{equation}
 where \(\rho\) is the air density, \(V\) is the airspeed, \(c\) is the chord length, \(\mu\) is the dynamic viscosity, and \(\nu\) is the kinematic viscosity of air.
-Using standard atmospheric conditions at sea level (\(\rho = 1.225~\mathrm{kg/m^3}\), \(\nu = 1.4207 \times 10^{-5}~\mathrm{m^2/s}\)) and the wing chord length of \(c = 0.25~\mathrm{m}\), Table~\ref{tab:reynolds_numbers} shows the Reynolds numbers across the operational flight envelope.
+Using standard atmospheric conditions at sea level (\(\rho = 1.225~\mathrm{kg/m^3}\), \(\nu = 1.4207 \times 10^{-5}~\mathrm{m^2/s}\)) and the wing chord length of \(c = 0.25~\mathrm{m}\), the Reynolds number is approximately \(Re \approx 1.76 \times 10^5\) at \SI{10}{\meter\per\second} and \(Re \approx 5.27 \times 10^5\) at \SI{30}{\meter\per\second}.
 
-\begin{table}[htbp]
-\centering
-\caption{Reynolds numbers for the NACA~0015 wing at various airspeeds with chord length \(c = 0.25~\mathrm{m}\) at sea-level conditions.}
-\label{tab:reynolds_numbers}
-\begin{tabular}{cc}
-\hline
-Airspeed [\si{\meter\per\second}] & Reynolds Number [-] \\
-\hline
-5  & 87,900 \\
-10 & 175,800 \\
-15 & 263,700 \\
-20 & 351,600 \\
-25 & 439,500 \\
-30 & 527,400 \\
-\hline
-\end{tabular}
-\end{table}
-
-At these conditions, the NACA~0015 profile provides a lift coefficient slightly below unity (\(C_L \approx 0.9\)) and a drag coefficient of approximately \(C_D = 0.08\).  
+At the \SI{10}{\meter\per\second} cruise condition (\(Re \approx 2 \times 10^5\)), the NACA~0015 profile achieves a lift coefficient of approximately \(C_L \approx 0.97\) at \(\alpha \approx 10^\circ\) and a drag coefficient of \(C_D \approx 0.025\).
 The target angle of attack in steady cruise was set to around \SI{10}{\degree}.  
-Figure~\ref{fig:naca0015_cl} shows the predicted lift coefficient for the NACA~0015 airfoil at two Reynolds numbers representative of the operating regime, computed using XFLR5 with NCrit=5 to account for free-stream turbulence typical of outdoor flight.
-At the design cruise angle of attack (\(\alpha \approx 10^\circ\)), the airfoil achieves \(C_L \approx 0.9\)--\(1.0\), providing sufficient lift to support the vehicle weight at moderate forward speeds.
-
-\begin{figure}[htbp]
-\centering
-\input{figures/pgfplots_styles.tex}
-\begin{tikzpicture}
-\begin{axis}[
-  tumplot,
-  xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
-  ylabel={Lift Coefficient, $C_L$ [-]},
-  xmin=-90, xmax=90,
-  ymin=-1.5, ymax=1.5,
-  legend pos=north west,
-  grid=major,
-]
-\addplot[tumblue, thick] table[x index=0, y index=1, col sep=comma] {data/Re_100,500_NCrit_5.csv};
-\addlegendentry{$Re=100$}
-\addplot[tumgreen, thick] table[x index=3, y index=4, col sep=comma] {data/Re_100,500_NCrit_5.csv};
-\addlegendentry{$Re=500$}
-\end{axis}
-\end{tikzpicture}
-\caption{Lift coefficient for the NACA~0015 airfoil at two Reynolds numbers as a function of angle of attack, computed using XFLR5 with NCrit=5. The design cruise angle of attack of approximately \SI{10}{\degree} provides \(C_L \approx 0.9\)--\(1.0\) across the operating Reynolds number range.}
-\label{fig:naca0015_cl}
-\end{figure}
+At this design cruise angle of attack, the airfoil provides sufficient lift to support the vehicle weight at moderate forward speeds.
+A detailed comparison of the NACA~0015 baseline airfoil against an improved AG25 airfoil, including aerodynamic performance metrics and their correlation with flight test results, is presented in Chapter~\ref{chapter:experiments-evaluation}.
 
 Lift and drag forces were estimated using the analytical model introduced earlier,
 \[
@@ -109,18 +123,18 @@ with \(\rho\) denoting air density, \(S\) the total projected wing area, and \(v
 These analytical estimates guided the sizing of the vehicle and the placement of the aerodynamic surfaces relative to the center of gravity.
 
 \paragraph{Quantitative estimate at \(12~\mathrm{m/s}\).}
-Using \(\rho=1.225~\mathrm{kg/m^3}\), total projected wing area \(S \approx 0.318~\mathrm{m^2}\), \(C_L \approx 0.9\) at \(\alpha \approx 10^\circ\), and \(C_D \approx 0.18\), we obtain
+Using \(\rho=1.225~\mathrm{kg/m^3}\), total projected wing area \(S \approx 0.318~\mathrm{m^2}\), \(C_L \approx 0.97\) at \(\alpha \approx 10^\circ\), and \(C_D \approx 0.025\), we obtain
 \[
 L \;=\; \tfrac{1}{2}\,\rho\,S\,C_L\,V^2
-\;\approx\; \tfrac{1}{2}\cdot 1.225 \cdot 0.318 \cdot 0.9 \cdot (12)^2
-\;\approx\; 25.25~\mathrm{N},
+\;\approx\; \tfrac{1}{2}\cdot 1.225 \cdot 0.318 \cdot 0.97 \cdot (12)^2
+\;\approx\; 27.2~\mathrm{N},
 \]
 \[
 D \;=\; \tfrac{1}{2}\,\rho\,S\,C_D\,V^2
-\;\approx\; \tfrac{1}{2}\cdot 1.225 \cdot 0.318 \cdot 0.18 \cdot (12)^2
-\;\approx\; 5.05~\mathrm{N}.
+\;\approx\; \tfrac{1}{2}\cdot 1.225 \cdot 0.318 \cdot 0.025 \cdot (12)^2
+\;\approx\; 0.70~\mathrm{N}.
 \]
-For the \SI{2.5}{kg} platform (\(W \approx 24.53~\mathrm{N}\)), the wings supply \(\approx 103\%\) of the weight at \(12~\mathrm{m/s}\), meaning the rotors can reduce thrust significantly and primarily need to overcome aerodynamic drag and provide control authority. The wing-induced drag corresponds to \(\approx 60.6~\mathrm{W}\) of propulsive power at \(12~\mathrm{m/s}\) (\(P_D = D\,V\)), not accounting for additional parasite/induced drag from the fuselage, rotors, and interference effects. These values are first-order estimates in the low-\(Re\) regime and neglect propeller–wing interaction; they nonetheless quantify the expected forward-flight relief on rotor-induced power.
+For the \SI{2.5}{kg} platform (\(W \approx 24.53~\mathrm{N}\)), the wings supply \(\approx 111\%\) of the weight at \(12~\mathrm{m/s}\), meaning the rotors can reduce thrust significantly and primarily need to overcome aerodynamic drag and provide control authority. The wing-induced drag corresponds to \(\approx 8.4~\mathrm{W}\) of propulsive power at \(12~\mathrm{m/s}\) (\(P_D = D\,V\)), not accounting for additional parasite/induced drag from the fuselage, rotors, and interference effects. These values are first-order estimates based on XFLR5 analysis and neglect propeller–wing interaction; they nonetheless quantify the expected forward-flight relief on rotor-induced power.
 
 Propeller–wing interaction effects were not explicitly studied in this work.  
 Since the wings are aligned with the rotor arms, partial overlap between the propeller wake and wing surface occurs, but its contribution to performance is assumed to be secondary compared to the main aerodynamic lift of the forward wings.  

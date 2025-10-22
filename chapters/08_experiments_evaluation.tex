@@ -62,7 +62,169 @@ Throttle-to-thrust and RPM-to-thrust mapping; present identified curves and fitt
 \section{Aerodynamic forces/moments quantification}
 - Identify equivalent $k_D,k_L$ or $C_L(\alpha), C_D(\alpha)$ from maneuvering flight data; discuss sensitivity.
 
-\section{Efficiency assessment}
+\section{Airfoil performance comparison and efficiency assessment}
+\label{sec:airfoil_comparison}
+
+\subsection{Aerodynamic characterization}
+
+To evaluate the potential for improved efficiency through airfoil optimization, we analyzed two wing configurations using XFLR5: the baseline NACA~0015 symmetric airfoil and an improved AG25 profile.
+The analysis covers Reynolds numbers of $Re=1\times10^5$, $Re=2\times10^5$, and $Re=5\times10^5$, representing the operational flight regime from low to moderate speeds.
+The primary operational condition at \SI{10}{\meter\per\second} cruise speed corresponds to $Re=2\times10^5$.
+All simulations use NCrit=5 to account for the free-stream turbulence typical of indoor and outdoor flight environments.
+
+Figures~\ref{fig:cl_comparison}--\ref{fig:ld_comparison} present comprehensive aerodynamic comparisons at two Reynolds numbers ($Re=1\times10^5$ and $Re=5\times10^5$).
+The results demonstrate excellent aerodynamic performance at operational Reynolds numbers, with the AG25 airfoil achieving lift-to-drag ratios exceeding 50 at low Reynolds numbers and above 60 at the cruise condition.
+
+\begin{figure}[htbp]
+\centering
+\input{figures/pgfplots_styles.tex}
+\begin{tikzpicture}
+\begin{axis}[
+  tumplot,
+  width=0.85\textwidth,
+  height=0.5\textwidth,
+  xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
+  ylabel={Lift Coefficient, $C_L$ [-]},
+  legend pos=north west,
+  grid=major,
+]
+\addplot[tumblue, thick] table[x=alpha, y=CL, col sep=comma] {scripts/data/CL_vs_alpha_NACA0015_Re0.100.csv};
+\addlegendentry{NACA 0015, $Re=1\times10^5$}
+\addplot[tumblue, thick, dashed] table[x=alpha, y=CL, col sep=comma] {scripts/data/CL_vs_alpha_NACA0015_Re0.500.csv};
+\addlegendentry{NACA 0015, $Re=5\times10^5$}
+\addplot[tumorange, thick] table[x=alpha, y=CL, col sep=comma] {scripts/data/CL_vs_alpha_AG25_Re0.100.csv};
+\addlegendentry{AG25, $Re=1\times10^5$}
+\addplot[tumorange, thick, dashed] table[x=alpha, y=CL, col sep=comma] {scripts/data/CL_vs_alpha_AG25_Re0.500.csv};
+\addlegendentry{AG25, $Re=5\times10^5$}
+\end{axis}
+\end{tikzpicture}
+\caption{Lift coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers ($Re=1\times10^5$ and $Re=5\times10^5$), computed using XFLR5 with NCrit=5. At $Re=1\times10^5$, the AG25 achieves maximum \(C_L \approx 1.20\) at \SI{10}{\degree}, while the NACA~0015 reaches \(C_L \approx 0.97\) at \SI{12}{\degree}. Both airfoils show improved performance at higher Reynolds numbers, with more gradual stall characteristics and higher maximum lift coefficients.}
+\label{fig:cl_comparison}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\input{figures/pgfplots_styles.tex}
+\begin{tikzpicture}
+\begin{axis}[
+  tumplot,
+  width=0.85\textwidth,
+  height=0.5\textwidth,
+  xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
+  ylabel={Drag Coefficient, $C_D$ [-]},
+  legend style={
+    at={(0.5,1.0)},
+    anchor=north
+  },
+  grid=major,
+]
+\addplot[tumblue, thick] table[x=alpha, y=CD, col sep=comma] {scripts/data/CD_vs_alpha_NACA0015_Re0.100.csv};
+\addlegendentry{NACA 0015, $Re=1\times10^5$}
+\addplot[tumblue, thick, dashed] table[x=alpha, y=CD, col sep=comma] {scripts/data/CD_vs_alpha_NACA0015_Re0.500.csv};
+\addlegendentry{NACA 0015, $Re=5\times10^5$}
+\addplot[tumorange, thick] table[x=alpha, y=CD, col sep=comma] {scripts/data/CD_vs_alpha_AG25_Re0.100.csv};
+\addlegendentry{AG25, $Re=1\times10^5$}
+\addplot[tumorange, thick, dashed] table[x=alpha, y=CD, col sep=comma] {scripts/data/CD_vs_alpha_AG25_Re0.500.csv};
+\addlegendentry{AG25, $Re=5\times10^5$}
+\end{axis}
+\end{tikzpicture}
+\caption{Drag coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers. At $Re=1\times10^5$, the AG25 achieves minimum \(C_D \approx 0.011\) near \(\alpha = \SI{-1}{\degree}\), significantly lower than the NACA~0015's \(C_D \approx 0.015\) at \(\alpha = \SI{0}{\degree}\). The AG25 demonstrates superior low-drag characteristics across the operational angle of attack range, with drag coefficients approximately 25-30\% lower than the NACA~0015 baseline.}
+\label{fig:cd_comparison}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\input{figures/pgfplots_styles.tex}
+\begin{tikzpicture}
+\begin{axis}[
+  tumplot,
+  width=0.85\textwidth,
+  height=0.5\textwidth,
+  xlabel={Drag Coefficient, $C_D$ [-]},
+  ylabel={Lift Coefficient, $C_L$ [-]},
+  legend style={
+    at={(1.0,0.5)},
+    anchor=east
+  }
+]
+\addplot[tumblue, thick] table[x=CD, y=CL, col sep=comma] {scripts/data/drag_polar_NACA0015_Re0.100.csv};
+\addlegendentry{NACA 0015, $Re=1\times10^5$}
+\addplot[tumblue, thick, dashed] table[x=CD, y=CL, col sep=comma] {scripts/data/drag_polar_NACA0015_Re0.500.csv};
+\addlegendentry{NACA 0015, $Re=5\times10^5$}
+\addplot[tumorange, thick] table[x=CD, y=CL, col sep=comma] {scripts/data/drag_polar_AG25_Re0.100.csv};
+\addlegendentry{AG25, $Re=1\times10^5$}
+\addplot[tumorange, thick, dashed] table[x=CD, y=CL, col sep=comma] {scripts/data/drag_polar_AG25_Re0.500.csv};
+\addlegendentry{AG25, $Re=5\times10^5$}
+\end{axis}
+\end{tikzpicture}
+\caption{Drag polar comparison showing the relationship between lift and drag coefficients. Curves shifted toward the left and top indicate better aerodynamic efficiency (higher lift for given drag). At both Reynolds numbers, the AG25 demonstrates dramatically superior efficiency with the drag polar shifted significantly leftward compared to NACA~0015, achieving higher lift coefficients at substantially lower drag penalties. This improved polar translates directly to extended flight endurance and reduced power consumption.}
+\label{fig:drag_polar}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\input{figures/pgfplots_styles.tex}
+\begin{tikzpicture}
+\begin{axis}[
+  tumplot,
+  width=0.85\textwidth,
+  height=0.5\textwidth,
+  xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
+  ylabel={Lift-to-Drag Ratio, $L/D$ [-]},
+  legend pos=south east,
+  grid=major,
+]
+\addplot[tumblue, thick] table[x=alpha, y=LD, col sep=comma] {scripts/data/LD_vs_alpha_NACA0015_Re0.100.csv};
+\addlegendentry{NACA 0015, $Re=1\times10^5$}
+\addplot[tumblue, thick, dashed] table[x=alpha, y=LD, col sep=comma] {scripts/data/LD_vs_alpha_NACA0015_Re0.500.csv};
+\addlegendentry{NACA 0015, $Re=5\times10^5$}
+\addplot[tumorange, thick] table[x=alpha, y=LD, col sep=comma] {scripts/data/LD_vs_alpha_AG25_Re0.100.csv};
+\addlegendentry{AG25, $Re=1\times10^5$}
+\addplot[tumorange, thick, dashed] table[x=alpha, y=LD, col sep=comma] {scripts/data/LD_vs_alpha_AG25_Re0.500.csv};
+\addlegendentry{AG25, $Re=5\times10^5$}
+\end{axis}
+\end{tikzpicture}
+\caption{Lift-to-drag ratio comparison highlighting the aerodynamic efficiency of both airfoils. At $Re=1\times10^5$, the AG25 achieves a remarkable maximum L/D of 53.0 at $\alpha \approx \SI{5}{\degree}$, with L/D ratios exceeding 50 between \SI{4}{\degree} and \SI{6}{\degree}—substantially higher than the NACA~0015's maximum L/D of 37.1 at \SI{6}{\degree}. At typical cruise angles (\SI{4}{\degree}--\SI{6}{\degree}), the AG25 maintains L/D ratios above 50, representing a 30--43\% improvement over the NACA~0015 baseline and enabling significantly more efficient forward flight.}
+\label{fig:ld_comparison}
+\end{figure}
+
+\paragraph{Key aerodynamic findings.}
+Table~\ref{tab:airfoil_metrics} summarizes the key performance metrics for both airfoils at $Re=2\times10^5$, which corresponds to the typical cruise speed of \SI{10}{\meter\per\second}.
+
+\begin{table}[htbp]
+\centering
+\caption{Aerodynamic performance metrics comparison at $Re=2\times10^5$ (NCrit=5).}
+\label{tab:airfoil_metrics}
+\begin{tabular}{lcc}
+\hline
+\textbf{Metric} & \textbf{NACA 0015} & \textbf{AG25} \\
+\hline
+Maximum $L/D$ & 46.4 at \SI{7}{\degree} & 66.4 at \SI{5}{\degree} \\
+$C_L$ at max $L/D$ & 0.81 & 0.83 \\
+$C_D$ at max $L/D$ & 0.018 & 0.013 \\
+Minimum $C_D$ & 0.010 at \SI{0}{\degree} & 0.008 at \SI{0}{\degree} \\
+Maximum $C_L$ & 1.05 at \SI{13}{\degree} & 1.27 at \SI{11}{\degree} \\
+$L/D$ at \SI{4}{\degree} cruise & 34.3 & 66.2 \\
+$L/D$ at \SI{6}{\degree} cruise & 43.9 & 64.4 \\
+\hline
+\end{tabular}
+\end{table}
+
+The AG25 airfoil demonstrates a 43\% improvement in maximum lift-to-drag ratio compared to the NACA~0015 (66.4 vs 46.4), achieved at a lower angle of attack (\SI{5}{\degree} vs \SI{7}{\degree}).
+At typical cruise conditions between \SI{4}{\degree} and \SI{6}{\degree}, the AG25 maintains exceptional L/D ratios of 64--66, representing a 47--93\% improvement over the NACA~0015 baseline.
+The AG25 also achieves 20\% lower minimum drag coefficient (0.008 vs 0.010) and 21\% higher maximum lift coefficient (1.27 vs 1.05).
+Most notably, at the \SI{4}{\degree} cruise condition, the AG25 achieves L/D = 66.2, nearly double the NACA~0015's L/D = 34.3, translating directly to approximately 50\% reduction in required aerodynamic power for the same flight speed.
+This substantial efficiency advantage across the entire operational envelope motivated the development of an improved platform variant incorporating the AG25 airfoil for efficiency-focused flight tests.
+
+\subsection{Flight test efficiency comparison}
+
+To validate the predicted aerodynamic improvements, we conducted comparative flight tests using both the baseline NACA~0015 platform (\SI{2.5}{\kg}) and the improved AG25 platform (\SI{2.2}{\kg}).
+
+% TODO: Add power consumption comparison plots from flight data
+% TODO: Add specific energy consumption (Wh/km) or endurance comparison
+% TODO: Discuss correlation between predicted L/D improvement and measured efficiency gains
+
+\subsection{Efficiency assessment summary}
 - Compare theoretical quad thrust input vs. measured thrust input in AIDA hall flights; quantify energy savings due to passive lift.
 
 \section{Baseline comparison}
