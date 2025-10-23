@@ -332,3 +332,5 @@ wheels/
 # IDE
 .vscode/
 .idea/
+
+scripts/data

@@ -77,29 +77,31 @@ Each motor is mounted with a \SI{5}{\degree} tilt to improve yaw authority. The 
 \end{figure}
 
 \subsubsection{Platform Variants}
-Two variants of the X-wing platform were used for efficiency experiments. The baseline platform (described above and shown in Fig.~\ref{fig:xwing_platform}) served as the primary testbed for control development and initial efficiency characterization. 
+Two variants of the X-wing platform were used for efficiency experiments. The baseline platform (described above and shown in Fig.~\ref{fig:xwing_platform}) represents the initial design developed as part of this thesis work and served as the primary testbed for control development and initial efficiency characterization. 
 
-An improved variant with modified aerodynamic characteristics was developed by [Colleague Name]\footnote{[Colleague Full Name], Bachelor thesis, [Lab Name], [Year]. The improved design builds upon the baseline platform and incorporates aerodynamic refinements.} and employed for comparative efficiency measurements. The improved variant features a different airfoil profile and modified dihedral angles optimized for enhanced lift-to-drag performance in forward flight. All other subsystems—propulsion, avionics, mass, and control architecture—remain identical between both platforms, allowing for direct aerodynamic comparison.
+During the course of this master's thesis, an improved variant with modified aerodynamic characteristics was developed by Pablo Kirby as part of his concurrent bachelor thesis work.\footnote{Pablo Kirby, \textit{Bachelor Thesis}, TUM, 2025. The improved design builds upon the baseline platform developed in this work and incorporates aerodynamic refinements informed by computational fluid dynamics analysis.} The improved variant features an AG25 airfoil profile and reduced dihedral angles ($\pm\SI{20}{\degree}$ versus $\pm\SI{45}{\degree}$) optimized for enhanced lift-to-drag performance in forward flight, based on XFLR5 simulations presented in Section~\ref{sec:airfoil_comparison}. All other subsystems—propulsion, avionics, and control architecture—remain identical between both platforms. The concurrent development timeline enabled direct comparative flight testing of both configurations under identical conditions.
 
 Table~\ref{tab:platform_comparison} summarizes the key differences between the two variants.
 
 \begin{table}[h]
 \centering
-\caption{Comparison of baseline and improved X-wing platform variants.}
+\caption{Comparison of baseline and improved X-wing platform variants. Both platforms share identical propulsion, avionics, and control systems, enabling direct aerodynamic performance comparison.}
 \label{tab:platform_comparison}
 \small
 \begin{tabularx}{\textwidth}{lXX}
 \toprule
-Parameter & Baseline Platform & Improved Platform \\
+Parameter & Baseline Platform (This Work) & Improved Platform (Kirby, 2025) \\
 \midrule
-Airfoil & NACA~0015 & ag25 \\
+Airfoil & NACA~0015 (symmetric) & AG25 (cambered) \\
 Dihedral/Anhedral & $\pm\SI{45}{\degree}$ (alternating) & $\pm\SI{20}{\degree}$ (alternating) \\
-Wing Length & \SI{450}{\milli\meter} & \SI{500}{\milli\meter} \\
+Wing Span & \SI{450}{\milli\meter} & \SI{500}{\milli\meter} \\
 Wing Chord & \SI{250}{\milli\meter} & \SI{230}{\milli\meter} \\
-Motor Tilt (Yaw Authority) & $\pm\SI{5}{\degree}$ & $\pm\SI{5}{\degree}$ \\
+Total Wing Area & \SI{0.318}{\meter\squared} & \SI{0.345}{\meter\squared} \\
+Motor Tilt & $\pm\SI{5}{\degree}$ & $\pm\SI{5}{\degree}$ \\
 Total Mass & \SI{2.5}{\kilogram} & \SI{2.2}{\kilogram} \\
 Propulsion & T-MOTOR VELOX~V2808 + HQProp 7×3.5×3 & Identical \\
 Avionics & Kakute~H7 + Jetson Orin Nano & Identical \\
+Control Architecture & INDI with aerodynamic compensation & Identical \\
 \bottomrule
 \end{tabularx}
 \end{table}
