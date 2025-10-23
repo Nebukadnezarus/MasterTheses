@@ -18,6 +18,49 @@ Each motor is mounted with a \SI{5}{\degree} tilt to improve yaw authority. The 
 
 \begin{figure}[htbp]
 \centering
+\begin{tikzpicture}[scale=1.5]
+    % Define motor positions (X configuration)
+    \coordinate (M1) at (1.5, -1.5);  % Bottom right
+    \coordinate (M2) at (1.5, 1.5);   % Top right
+    \coordinate (M3) at (-1.5, -1.5); % Bottom left
+    \coordinate (M4) at (-1.5, 1.5);  % Top left
+    
+    % Draw center cross (arms)
+    \draw[very thick, gray!50] (-1.5, -1.5) -- (1.5, 1.5);
+    \draw[very thick, gray!50] (-1.5, 1.5) -- (1.5, -1.5);
+    
+    % Draw motors as circles with rotation arrows
+    % Motor 1 (Bottom Right) - CW - arrow below
+    \draw[thick, fill=gray!20] (M1) circle (0.5cm);
+    \node[font=\Large\bfseries] at (M1) {1};
+    \draw[->, thick, TUMBlue, line width=1.5pt] (M1) ++(315:0.4cm) arc (315:225:0.4cm);
+    
+    % Motor 2 (Top Right) - CCW - arrow above
+    \draw[thick, fill=gray!20] (M2) circle (0.5cm);
+    \node[font=\Large\bfseries] at (M2) {2};
+    \draw[->, thick, TUMBlue, line width=1.5pt] (M2) ++(45:0.4cm) arc (45:135:0.4cm);
+    
+    % Motor 3 (Bottom Left) - CCW - arrow below
+    \draw[thick, fill=gray!20] (M3) circle (0.5cm);
+    \node[font=\Large\bfseries] at (M3) {3};
+    \draw[->, thick, TUMBlue, line width=1.5pt] (M3) ++(225:0.4cm) arc (225:315:0.4cm);
+    
+    % Motor 4 (Top Left) - CW - arrow above
+    \draw[thick, fill=gray!20] (M4) circle (0.5cm);
+    \node[font=\Large\bfseries] at (M4) {4};
+    \draw[->, thick, TUMBlue, line width=1.5pt] (M4) ++(135:0.4cm) arc (135:45:0.4cm);
+    
+    % Forward direction arrow (pointing upward)
+    \draw[->, very thick, red, line width=2pt] (0, 2.5) -- (0, 3.2);
+    \node[red, font=\Large\bfseries] at (0, 3.6) {Forward};
+    
+\end{tikzpicture}
+\caption{Motor configuration and numbering convention. Blue arrows indicate rotation direction (clockwise for motors 1 and 4, counter-clockwise for motors 2 and 3).}
+\label{fig:motor_configuration}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
 \begin{minipage}[b]{0.48\textwidth}
     \centering
     \includegraphics[width=\textwidth,angle=-90]{figures/drone_hover.jpg}
