@@ -98,7 +98,7 @@ Wing Span & \SI{450}{\milli\meter} & \SI{500}{\milli\meter} \\
 Wing Chord & \SI{250}{\milli\meter} & \SI{230}{\milli\meter} \\
 Total Wing Area & \SI{0.318}{\meter\squared} & \SI{0.345}{\meter\squared} \\
 Motor Tilt & $\pm\SI{5}{\degree}$ & $\pm\SI{5}{\degree}$ \\
-Total Mass & \SI{2.5}{\kilogram} & \SI{2.2}{\kilogram} \\
+Total Mass & \SI{2.5}{\kilogram} & \SI{2.8}{\kilogram} \\
 Propulsion & T-MOTOR VELOX~V2808 + HQProp 7×3.5×3 & Identical \\
 Avionics & Kakute~H7 + Jetson Orin Nano & Identical \\
 Control Architecture & INDI with aerodynamic compensation & Identical \\
@@ -106,10 +106,12 @@ Control Architecture & INDI with aerodynamic compensation & Identical \\
 \end{tabularx}
 \end{table}
 
-\subsubsection{Thrust Characterization and Command Mapping}
+\subsubsection{Thrust Characterization and Command Mapping}\label{sec:thrust-characterization}
 To accurately relate motor command inputs to generated thrust, a static thrust characterization was performed for the chosen motor–propeller configuration.  
 A single T-MOTOR~VELOX~V2808 motor equipped with an HQProp~7×3.5×3 propeller was mounted on a six-axis force–torque sensor (Rokubi~Mini) using a custom 3D-printed fixture.  
 The setup allowed precise measurement of the vertical force while commanding the motor through the same DShot interface used in flight (Fig.~\ref{fig:force_test_stand}).
+
+The complete experimental results, fitted models, and analysis are presented in Section~\ref{sec:thrust_map_results}.
 
 \begin{figure}[h]
 \centering
