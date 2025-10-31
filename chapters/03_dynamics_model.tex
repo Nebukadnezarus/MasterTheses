@@ -4,6 +4,76 @@
 
 This chapter presents the six-degree-of-freedom (6-DoF) rigid-body model for the X-wing quadrotor. The formulation uses a standard quadrotor body model augmented with a simple aerodynamic wing model (quadratic in airspeed) and lumps unmodeled effects into disturbance terms. The model is used for simulation, parameter identification, and to document the quantities that the controller deliberately does \emph{not} model explicitly (because INDI compensates them incrementally).
 
+\section{List of Symbols}
+\begin{longtable}{p{0.15\textwidth}p{0.6\textwidth}p{0.15\textwidth}}
+\caption{Symbols used in the dynamics model.}
+\label{tab:symbols-dynamics}\\
+\toprule
+\textbf{Symbol} & \textbf{Description} & \textbf{Unit} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{c}{\tablename\ \thetable\ -- continued from previous page} \\
+\toprule
+\textbf{Symbol} & \textbf{Description} & \textbf{Unit} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{Continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+$\mathcal{W}$ & World (inertial) frame (ENU) & --- \\
+$\mathcal{B}$ & Body-fixed frame at CoG & --- \\
+$\mathbf{e}_x,\mathbf{e}_y,\mathbf{e}_z$ & Body-frame unit vectors & --- \\
+$\mathbf{p}$ & Position in world frame & m \\
+$\mathbf{v}$ & Velocity in world frame & m/s \\
+$R$ & Rotation matrix $\mathcal{B}\!\to\!\mathcal{W}$ & --- \\
+$\boldsymbol{\omega}$ & Angular velocity in body frame & rad/s \\
+$\mathbf{g}$ & Gravity vector $[0,0,-g]^\top$ & m/s$^2$ \\
+$m$ & Vehicle mass & kg \\
+$J$ & Inertia matrix in body frame & kg·m$^2$ \\
+$\mathbf{F}_g$ & Gravitational force & N \\
+\midrule
+$f_i$ & Thrust produced by rotor $i$ & N \\
+$\mathbf{u}$ & Control input vector $[f_1,f_2,f_3,f_4]^\top$ & N \\
+$\omega_i$ & Angular speed of rotor $i$ & rad/s \\
+$k_t$ & Thrust coefficient & N·s$^2$·rad$^{-2}$ \\
+$b_i$ & Static bias in thrust model for rotor $i$ & N \\
+$k_Q$ & Torque coefficient & N·m·s$^2$·rad$^{-2}$ \\
+$Q_i$ & Reaction torque of rotor $i$ & N·m \\
+$c_i$ & Prop rotation sign ($\pm 1$) & --- \\
+\midrule
+$\mathbf{v}_w$ & Wind velocity in world frame & m/s \\
+$\mathbf{v}_a$ & Airspeed in body frame & m/s \\
+$V$ & Airspeed magnitude & m/s \\
+$\alpha$ & Angle of attack & rad \\
+$\beta$ & Sideslip angle & rad \\
+$\rho$ & Air density & kg/m$^3$ \\
+$q$ & Dynamic pressure $=\tfrac{1}{2}\rho V^2$ & N/m$^2$ \\
+$S$ & Wing reference area & m$^2$ \\
+$b$ & Wing span & m \\
+$AR$ & Aspect ratio $b^2/S$ & --- \\
+$a_\alpha$ & Lift-curve slope & rad$^{-1}$ \\
+$a_\beta$ & Side-force slope (or $C_{Y_\beta}$) & rad$^{-1}$ \\
+$C_L, C_D, C_Y$ & Lift, drag, side-force coefficients & --- \\
+$C_{D0}$ & Zero-lift drag coefficient & --- \\
+$k$ & Induced drag factor & --- \\
+\midrule
+$\mathbf{F}$ & Total force in world frame & N \\
+$\mathbf{F}_T$ & Rotor thrust force in world frame & N \\
+$\mathbf{F}_{\!aero}$ & Aerodynamic force in body frame & N \\
+$\boldsymbol{\tau}$ & Total moment in body frame & N·m \\
+$\boldsymbol{\tau}_T$ & Rotor-generated moment & N·m \\
+$\boldsymbol{\tau}_{\!aero}$ & Aerodynamic moment & N·m \\
+$\mathbf{r}_i$ & Arm vector to rotor $i$ & m \\
+$\mathbf{r}_w$ & Aerodynamic center offset & m \\
+$\hat{\mathbf{t}}_i$ & Rotor $i$ thrust direction unit vector & --- \\
+$G$ & Allocation matrix (force–moment mapping) & --- \\
+$\hat{\mathbf{v}}$ & Airspeed unit vector & --- \\
+$\hat{\mathbf{z}}_L$ & Lift direction unit vector & --- \\
+$\hat{\mathbf{y}}_S$ & Side-force direction unit vector & --- \\
+\end{longtable}
+
 \section{Frames, States, Inputs}
 We use a world (inertial) frame $\mathcal{W}$ with ENU convention and a body-fixed frame $\mathcal{B}$ at the CoG. Gravity is $\mathbf{g}=[0,\,0,\,-g]^\top$ in $\mathcal{W}$.
 
@@ -43,10 +113,11 @@ Total force:
 $\mathbf{F}_g=m\mathbf{g}$.
 
 \subsection{Rotor Thrust}
-Each rotor $i$ produces a thrust $f_i$ approximately along $+\mathbf{e}_3$ of $\mathcal{B}$ (tilt effects handled in allocation). The net thrust in $\mathcal{W}$:
+Each rotor $i$ produces a thrust $f_i$ along its (possibly tilted) direction $\hat{\mathbf{t}}_i$ in $\mathcal{B}$. The net thrust in $\mathcal{W}$ is
 \begin{equation}
-\mathbf{F}_T \;=\; \Big(\sum_{i=1}^4 f_i\Big)\, R\,\mathbf{e}_3.
+\mathbf{F}_T = R\sum_{i=1}^4 f_i\,\hat{\mathbf{t}}_i.
 \end{equation}
+For small fixed tilts (e.g., $\pm 5^\circ$) we also provide the common approximation $\mathbf{F}_T \approx (\sum_i f_i)\,R\mathbf{e}_3$; all tilt effects are embedded in the allocation matrix $G$ used for moments.
 
 \subsection{Aerodynamic Forces on Fixed Surfaces}
 We use a lumped, quasi-steady wing model. Dynamic pressure $q=\tfrac{1}{2}\rho V^2$, total reference area $S$.
@@ -56,10 +127,40 @@ Lift/drag coefficients:
 C_L(\alpha)=a_\alpha\,\alpha,\qquad
 C_D(\alpha)=C_{D0}+k\,C_L(\alpha)^2.
 \]
+
+The lift coefficient $C_L$ is modeled as a linear function of the angle of attack~$\alpha$:
+\begin{equation}
+C_L(\alpha) = a_\alpha \, \alpha,
+\label{eq:lift-curve}
+\end{equation}
+where $a_\alpha$ [rad$^{-1}$] is the lift-curve slope.
+$C_L$ represents the dimensionless ratio of lift force to dynamic pressure and reference area,
+\(
+C_L = \frac{L}{\tfrac{1}{2}\rho V^2 S}.
+\)
+The angle of attack $\alpha$ is defined as the angle between the incoming airflow and the vehicle body $x$-axis (or the mean aerodynamic chord of the wing).
+For thin airfoils and small angles, $a_\alpha$ can be approximated by $2\pi$~rad$^{-1}$ in 2D, or by the finite-wing correction
+\(
+a_\alpha = \frac{2\pi AR}{AR + 2}
+\)
+with aspect ratio $AR = b^2/S$.
+We measure $\alpha$ relative to the body $x$-axis (mean aerodynamic chord aligned with $\mathbf{e}_x$); the linear model holds for attached flow ($|\alpha|\lesssim 10^\circ$).
+This linear relation is valid up to moderate angles
+and forms the basis for the simplified quadratic aerodynamic model used here.
+
+\paragraph{Side-force convention.}
+We use $C_Y(\beta)=C_{Y_\beta}\,\beta$ with $C_{Y_\beta}$ [rad$^{-1}$] the stability derivative.
+For conventional weathercock-stable configurations $C_{Y_\beta}<0$ (side-force opposes $\beta$).
+In our small UAV geometry $C_{Y_\beta}$ is identified experimentally and may be small in magnitude.
+
 Optional lateral (side-force) coefficient:
 \[
 C_Y(\beta)=a_\beta\,\beta.
 \]
+
+\paragraph{Aerodynamic axes.}
+We assume the wing span aligns with $\mathbf{e}_y$, so lift lies in the $(x,z)$ plane.
+The definitions of $\hat{\mathbf{z}}_L$ and $\hat{\mathbf{y}}_S$ are undefined when $\hat{\mathbf{v}}$ is parallel to the respective cross-product axis (e.g., $\hat{\mathbf{v}}\parallel\mathbf{e}_y$ or $\hat{\mathbf{v}}\parallel\mathbf{e}_z$); in implementation we fall back to the last valid direction or a small-angle approximation.
 
 Unit aerodynamic directions in $\mathcal{B}$ (from $\mathbf{v}_a$):
 \[
@@ -88,7 +189,7 @@ Total moment:
 \end{equation}
 
 \subsection{Rotor-Generated Moments}
-Let $\mathbf{r}_i$ be the arm vector from CoG to rotor $i$, and $c_i\in\{+1,-1\}$ the prop rotation sign (reaction torque direction). With small motor tilt handled by per-rotor thrust directions $\hat{\mathbf{t}}_i$,
+Let $\mathbf{r}_i$ be the arm vector from CoG to rotor $i$, and $c_i\in\{+1,-1\}$ the prop rotation sign (reaction torque direction). Here $c_i\in\{+1,-1\}$ encodes the rotor spin direction (positive for CCW viewed from above). With small motor tilt handled by per-rotor thrust directions $\hat{\mathbf{t}}_i$,
 \begin{align}
 \boldsymbol{\tau}_{\text{arms}} &= \sum_{i=1}^4 \mathbf{r}_i \times (f_i\,\hat{\mathbf{t}}_i),\\
 \boldsymbol{\tau}_{\text{react}} &= \sum_{i=1}^4 c_i\,Q_i\,\mathbf{e}_3,\qquad Q_i\approx k_Q\,\omega_i^2,
