@@ -1,0 +1,82 @@
+% !TeX root = ../main.tex
+
+\chapter{Related Work}\label{chapter:related-work}
+
+Designing a UAV that combines agility and energy efficiency while remaining controllable across hover and forward flight requires balancing canonical architectures: pure multirotors, fixed-wing aircraft, and hybrid configurations such as tailsitters, tiltrotors, and quadplanes.  
+In addition, several studies investigate aerodynamic augmentation of multicopters through fixed lifting or streamlining surfaces to mitigate the inherent forward-flight inefficiency of conventional quadrotors.
+
+\section{Baselines: Agility vs.\ Efficiency}
+
+\paragraph{Pure multirotors}
+Quadrotors excel in agility and controllability during hover and low-speed flight.  
+Incremental Nonlinear Dynamic Inversion (INDI) has become a robust inner-loop control approach for such vehicles, proven to handle modeling errors and aerodynamic disturbances without requiring a detailed aerodynamic model~\cite{Sieberling2010,Tzoumanikas2021}.  
+These controllers enable precise tracking of aggressive trajectories, but the need to tilt thrust for lift makes sustained forward flight energetically inefficient.
+
+\paragraph{Fixed-wing aircraft}
+Fixed-wing UAVs achieve superior cruise efficiency due to aerodynamic lift, yet cannot hover or sustain stationary flight.
+
+\paragraph{Hybrids: tailsitters and tiltrotor/tilt-wing systems}
+Hybrid VTOL designs seek to merge both regimes.  
+Tailsitter configurations have demonstrated global trajectory-tracking and agile uncoordinated or knife-edge flight using global INDI frameworks~\cite{Tal2022Global,Tal2021Tailsitter}.  
+Tilt-wing concepts have been modeled and simulated with detailed transition dynamics, for example by Daud~Filho et~al.~\cite{DaudFilho2024}.  
+However, these systems remain mechanically and algorithmically complex, with significant coupling effects during transitions.
+
+\section{Controller Classes Across the Spectrum}
+
+Geometric and differential-flatness-based control form the theoretical foundation for aggressive UAV tracking.  
+Goodarzi et~al.\ introduced a geometric adaptive variant capable of handling parameter uncertainty on $\mathrm{SE}(3)$~\cite{Goodarzi2015}, while Mellinger and Kumar presented a polynomial trajectory generation and tracking approach based on differential flatness~\cite{Mellinger2011}.  
+INDI, originally formulated for robust flight control in fixed-wing aircraft~\cite{Sieberling2010,vanKampen2018}, has been successfully applied to agile multirotors as a disturbance-rejection strategy~\cite{Tzoumanikas2021}.  
+These works collectively show that modern control architectures can achieve strong tracking and robustness without precise aerodynamic modeling.
+
+\section{Aerodynamic Augmentation on Multicopters}
+
+A separate line of research attaches fixed lifting or streamlining surfaces to quadrotors to improve cruise efficiency while retaining standard control structures.
+
+\paragraph{Wings}
+Dawkins and DeVries integrated small wings on a micro-quadrotor and quantified a clear trade-off: roughly 35\% lower power consumption in forward flight, at the cost of about 45\% more hover power due to added mass and drag.  
+The wing configuration became advantageous above approximately 3–5\,m/s, depending on angle of attack and rotor interaction~\cite{Dawkins2018}.  
+These findings indicate that properly sized wings can yield meaningful efficiency gains with minimal impact on control authority.
+
+Xiao et~al.\ attached a fixed lifting wing to a 1.2\,kg multirotor and reported 50.14\% less electrical power at 15\,m/s relative to the bare quad, without requiring controller changes~\cite{Xiao2020}.  
+This demonstrates that aerodynamic surfaces can roughly halve the energy per distance at moderate cruise speeds while maintaining standard quadrotor control.
+
+\paragraph{Shrouded and ducted designs}
+Research on shrouded rotors likewise shows aerodynamic performance benefits and noise reduction potential for compact UAVs~\cite{Hrishikeshavan2014}.  
+Such configurations further highlight the design space between pure multirotors and fully morphing hybrids.
+
+\section{Quantitative Comparison and Trade-offs}
+
+\paragraph{Agility}
+INDI-based multirotor controllers achieve aggressive tracking and strong disturbance tolerance~\cite{Sieberling2010,Tzoumanikas2021}.  
+While multi-g performance has been shown in other studies, those data are not included here and thus not quantified.
+
+\paragraph{Efficiency}
+Empirical evidence from fixed-surface designs shows substantial forward-flight gains: approximately 35\%–50\% lower cruise power between 5–15\,m/s~\cite{Dawkins2018,Xiao2020}.  
+Hover efficiency is modestly degraded due to additional mass and drag.
+
+\paragraph{Controllability and transitions}
+Multirotors and their aerodynamically augmented variants retain full control authority in both hover and forward flight using the same actuators and control allocation, avoiding transition complexity.  
+Hybrid systems such as tilt-wings require coordinated transition planning and mode-dependent control allocation~\cite{DaudFilho2024}.
+
+\paragraph{Implementation complexity}
+Adding fixed aerodynamic surfaces is mechanically simple and controller-agnostic.  
+Tilt-wing or tailsitter hybrids, by contrast, involve additional mechanisms and complex transition management~\cite{Tal2022Global,DaudFilho2024}.
+
+\section{Gaps and Open Issues}
+
+Three key gaps remain evident:
+\begin{enumerate}
+  \item Few published experiments report both aggressive maneuverability and detailed cruise-efficiency metrics for fixed-surface quadrotors.
+  \item Rotor-wake and wing-interaction effects across the speed envelope are incompletely modeled, leaving uncertainty in disturbance behavior.
+  \item Hybrid-VTOL studies document transition dynamics but rarely quantify lateral-acceleration or coordinated-turn performance under real aerodynamic loads~\cite{DaudFilho2024}.
+\end{enumerate}
+
+\section{Why a Quadrotor with Fixed Aerodynamic Surfaces?}
+
+The evidence from verified literature supports this design rationale:
+\begin{enumerate}
+  \item \textbf{Preserve controllability and robustness:} INDI and geometric/differential-flatness controllers provide reliable tracking and disturbance tolerance without detailed aerodynamic modeling~\cite{Sieberling2010,Goodarzi2015,Tzoumanikas2021}.
+  \item \textbf{Gain measurable efficiency improvements:} Fixed aerodynamic surfaces yield 35–50\% cruise-power reduction in the 5–15\,m/s range~\cite{Dawkins2018,Xiao2020}.
+  \item \textbf{Keep low mechanical complexity:} No tilting actuators or transition control are required; standard multirotor architecture suffices~\cite{DaudFilho2024}.
+\end{enumerate}
+Given the criteria—agility, cruise efficiency, controllability, and simplicity—the literature favors a quadrotor with fixed aerodynamic surfaces over more complex hybrids.
