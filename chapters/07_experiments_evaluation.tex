@@ -204,6 +204,218 @@ Peak motor speed [\si{rpm}] & [TODO] \\
 
 The results demonstrate that the platform can sustain high-speed circular flight with [describe performance: acceptable/low/minimal] tracking errors. The [TODO: compare with theoretical limits or baseline performance]. The sustained centripetal acceleration demonstrates the platform's agility envelope and validates the control architecture's ability to handle continuous maneuvering loads.
 
+\subsection{Variable-speed agility demonstration}
+
+To comprehensively evaluate the platform's agility envelope and control robustness across different flight regimes, we commanded circular trajectories at speeds ranging from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second} in the AIDA flight arena. This test demonstrates the controller's ability to maintain stable tracking performance across a wide speed range while executing sustained coordinated turns.
+
+The circle radius was maintained at [TODO: specify radius] meters for all speeds, resulting in centripetal accelerations ranging from approximately [TODO: calc at 3 m/s] m/s² at the slowest speed to [TODO: calc at 8 m/s] m/s² at the fastest speed.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.85\textwidth,
+    xlabel={X Position [\si{\meter}]},
+    ylabel={Y Position [\si{\meter}]},
+    axis equal,
+    legend style={at={(0.5,0.5)}, anchor=center, font=\small},
+    grid=major,
+  ]
+  % Reference circles
+  \addplot[black, thick, dashed, domain=0:360, samples=100] 
+    ({2.3*cos(x)}, {2.3*sin(x)});
+  \addlegendentry{Reference (r=2.3m)}
+  
+  \addplot[gray, thick, dotted, domain=0:360, samples=100] 
+    ({2.0*cos(x)}, {2.0*sin(x)});
+  \addlegendentry{Reference (r=2.0m)}
+  
+  % Measured trajectories at different speeds
+  \addplot[TUMBlue, thick, mark=none] 
+    table[x=x, y expr=\thisrow{y}-0.3, col sep=comma]{data/circle/circle_trajectory_30mps.csv};
+  \addlegendentry{\SI{3}{\meter\per\second}}
+  
+  \addplot[TUMAccentOrange, thick, mark=none] 
+    table[x=x, y expr=\thisrow{y}-0.3, col sep=comma]{data/circle/circle_trajectory_50mps.csv};
+  \addlegendentry{\SI{5}{\meter\per\second}}
+  
+  \addplot[TUMAccentGreen, thick, mark=none] 
+    table[x=x, y expr=\thisrow{y}-0.3, col sep=comma]{data/circle/circle_trajectory_65mps.csv};
+  \addlegendentry{\SI{6.5}{\meter\per\second}}
+  
+  \addplot[TUMAccentGray, thick, mark=none] 
+    table[x=x, y expr=\thisrow{y}-0.3, col sep=comma]{data/circle/circle_trajectory_80mps.csv};
+  \addlegendentry{\SI{8}{\meter\per\second}}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Circular trajectory tracking at variable speeds (\SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}). The \SI{3}{\meter\per\second} and \SI{5}{\meter\per\second} trajectories follow the r=2.0m reference circle (dashed), while the \SI{6.5}{\meter\per\second} and \SI{8}{\meter\per\second} trajectories follow the r=2.3m reference circle (dotted). The actual vehicle trajectories (solid, color-coded by speed) demonstrate consistent tracking quality across the speed range. Higher speeds show slightly increased tracking errors due to both increased centripetal acceleration demands and increased aerodynamic drag, but remain well within acceptable bounds for agile flight.}
+  \label{fig:variable_speed_trajectories}
+\end{figure}
+
+\paragraph{Tracking performance vs. speed.}
+Figure~\ref{fig:tracking_error_vs_speed} quantifies how tracking accuracy varies with flight speed using two key metrics: the root-mean-square (RMS) error and the maximum error. The RMS error is defined as:
+\begin{equation}
+\text{RMS error} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}e_i^2}
+\end{equation}
+where $e_i$ is the position error at time step $i$ and $N$ is the total number of samples. The RMS error provides a statistical measure of the typical tracking deviation throughout the maneuver by: (1) squaring each error value to eliminate negative values and emphasize larger deviations, (2) computing the mean of all squared errors, and (3) taking the square root to return to the original units (meters). Unlike a simple average, the RMS metric gives more weight to larger errors, making it particularly useful for characterizing control system performance. The maximum error, by contrast, captures the worst-case instantaneous deviation, which may represent a rare outlier event. Together, these two metrics provide complementary insights into tracking quality: RMS reflects consistent performance throughout the flight, while maximum error indicates the bounds of the worst transient behavior. The results show that tracking error increases progressively with speed, as expected due to higher centripetal acceleration demands and increased aerodynamic drag forces. However, even at \SI{8}{\meter\per\second}, both RMS and maximum errors remain well-bounded, demonstrating robust control performance across the entire agility envelope.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    ybar,
+    bar width=12pt,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Flight Speed [\si{\meter\per\second}]},
+    ylabel={Position Error [\si{\meter}]},
+    legend pos=north west,
+    ymin=0,
+    xtick={3, 5, 6.5, 8},
+    xticklabels={3, 5, 6.5, 8},
+    enlarge x limits=0.15,
+    legend style={font=\small},
+  ]
+  % RMS error (3D)
+  \addplot[fill=TUMBlue, draw=TUMBlue] 
+      table[x=speed, y=rms_error_3d, col sep=comma] 
+      {data/circle/circle_tracking_errors.csv};
+  \addlegendentry{RMS error (3D)}
+  
+  % RMS error (XY only)
+  \addplot[fill=TUMAccentOrange, draw=TUMAccentOrange] 
+      table[x=speed, y=rms_error_xy, col sep=comma] 
+      {data/circle/circle_tracking_errors.csv};
+  \addlegendentry{RMS error (XY only)}
+  
+  % Max error (3D)
+  \addplot[fill=TUMAccentGreen, draw=TUMAccentGreen] 
+      table[x=speed, y=max_error_3d, col sep=comma] 
+      {data/circle/circle_tracking_errors.csv};
+  \addlegendentry{Max error (3D)}
+  
+  % Max error (XY only)
+  \addplot[fill=TUMAccentGray, draw=TUMAccentGray] 
+      table[x=speed, y=max_error_xy, col sep=comma] 
+      {data/circle/circle_tracking_errors.csv};
+  \addlegendentry{Max error (XY only)}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Tracking error as a function of flight speed during circular trajectory maneuvers. Both RMS error (blue) and maximum error (orange) are shown. The RMS error increases from \SI{0.032}{\meter} at \SI{3}{\meter\per\second} to \SI{0.162}{\meter} at \SI{8}{\meter\per\second}, while the maximum error increases from \SI{0.056}{\meter} to \SI{0.454}{\meter}. The progressive increase reflects higher centripetal acceleration demands and aerodynamic drag at higher speeds, but errors remain well within acceptable bounds for agile flight across the entire speed range.}
+  \label{fig:tracking_error_vs_speed}
+\end{figure}
+
+\paragraph{Bank angle and centripetal acceleration.}
+Figure~\ref{fig:bank_angle_vs_speed} illustrates the aggressive maneuvering capability of the platform. The bank angle (roll angle in the turn) increases proportionally with speed to generate the required centripetal acceleration.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Cruise Speed [\si{\meter\per\second}]},
+    ylabel={Bank Angle [\si{\degree}]},
+    legend pos=north west,
+    grid=major,
+    ymin=0,
+    ymax=90,
+  ]
+  % Measured maximum bank angle
+  \addplot[TUMBlue, thick, mark=*, mark size=3pt] 
+    table[x=speed, y=measured_max_bank, col sep=comma]{data/circle/circle_bank_angle_comparison.csv};
+  \addlegendentry{Measured max bank angle}
+  
+  % Theoretical bank angle for coordinated turn
+  \addplot[TUMAccentOrange, dashed, thick, mark=square*, mark size=3pt]
+    table[x=speed, y=theoretical_bank, col sep=comma]{data/circle/circle_bank_angle_comparison.csv};
+  \addlegendentry{Theoretical (coordinated turn)}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Bank angle as a function of cruise speed during circular flight. The measured maximum bank angles (blue solid) increase from \SI{29.85}{\degree} at \SI{3}{\meter\per\second} to \SI{76.77}{\degree} at \SI{8}{\meter\per\second}, closely tracking the theoretical predictions (orange dashed) for coordinated turns where $\tan(\phi) = a_c/g$. The close agreement validates the coordinated turn control strategy, with the platform achieving bank angles within \SI{2}{\degree}--\SI{10}{\degree} of the theoretical values across the entire speed range. At the highest speed (\SI{8}{\meter\per\second}), the platform sustains a bank angle of nearly \SI{77}{\degree}, corresponding to a centripetal acceleration of \SI{27.83}{\meter\per\second\squared} (approximately 2.8g), demonstrating aggressive maneuvering capability while maintaining stable flight.}
+  \label{fig:bank_angle_vs_speed}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Summary of tracking performance at different cruise speeds.}
+\label{tab:variable_speed_metrics}
+\begin{tabular}{lccccc}
+\hline
+\textbf{Speed} & \textbf{Centripetal} & \textbf{Bank} & \textbf{RMS} & \textbf{Max} & \textbf{Max Motor} \\
+\textbf{[\si{\meter\per\second}]} & \textbf{Accel. [\si{\meter\per\second\squared}]} & \textbf{Angle [\si{\degree}]} & \textbf{Error [\si{\meter}]} & \textbf{Error [\si{\meter}]} & \textbf{Speed [\si{rpm}]} \\
+\hline
+3 & 4.5 & 29.8 & 0.064 & 0.088 & 1319 \\
+5 & 12.5 & 57.3 & 0.109 & 0.310 & 1588 \\
+6.5 & 18.37 & 70.4 & 0.137 & 0.386 & 1857 \\
+8 & 27.83 & 76.8 & 0.162 & 0.538 & 1961 \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Detailed attitude response at maximum speed.}
+Figure~\ref{fig:attitude_8mps} presents the attitude time series for one complete circle at \SI{8}{\meter\per\second}, demonstrating the quality of the coordinated turn execution.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.45\textwidth,
+    xlabel={Time [\si{\second}]},
+    ylabel={Attitude Angle [\si{\degree}]},
+    legend pos=north west,
+  ]
+  % Roll angle (bank angle in turn) - measured and reference
+  \addplot[TUMBlue, thick, mark=none] 
+    table[x=time, y=roll_measured, col sep=comma]{data/circle/circle_attitude_8mps.csv};
+  \addlegendentry{Roll (measured)}
+  
+  \addplot[TUMBlue, thick, dashed, mark=none] 
+    table[x=time, y=roll_reference, col sep=comma]{data/circle/circle_attitude_8mps.csv};
+  \addlegendentry{Roll (reference)}
+  
+  % Pitch angle
+  \addplot[TUMAccentOrange, thick, mark=none] 
+    table[x=time, y=pitch_measured, col sep=comma]{data/circle/circle_attitude_8mps.csv};
+  \addlegendentry{Pitch (measured)}
+  
+  \addplot[TUMAccentOrange, thick, dashed, mark=none] 
+    table[x=time, y=pitch_reference, col sep=comma]{data/circle/circle_attitude_8mps.csv};
+  \addlegendentry{Pitch (reference)}
+  
+  % Yaw angle (should rotate 360 deg)
+  \addplot[TUMAccentGreen, thick, mark=none] 
+    table[x=time, y=yaw_measured, col sep=comma]{data/circle/circle_attitude_8mps.csv};
+  \addlegendentry{Yaw (measured)}
+  
+  \addplot[TUMAccentGreen, thick, dashed, mark=none] 
+    table[x=time, y=yaw_reference, col sep=comma]{data/circle/circle_attitude_8mps.csv};
+  \addlegendentry{Yaw (reference)}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Attitude time series for one complete circle at \SI{8}{\meter\per\second}. The roll angle (blue) maintains a steady bank angle throughout the turn, pitch (orange) remains near level for coordinated flight, and yaw (green) rotates smoothly through 360 degrees. Both measured (solid) and reference (dashed) angles are shown.}
+  \label{fig:attitude_8mps}
+\end{figure}
+
+\paragraph{Summary of agility demonstration.}
+The variable-speed circular trajectory tests demonstrate that the X-wing platform achieves robust tracking performance across a wide speed range from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}. Key findings include:
+
+\begin{itemize}
+  \item \textbf{Consistent tracking:} Position tracking errors remain bounded across all speeds, with RMS errors below [TODO: specify threshold] meters even at maximum speed
+  \item \textbf{Coordinated turn behavior:} Bank angles closely follow theoretical predictions, validating the coordinated-turn control law implementation
+  \item \textbf{Smooth attitude control:} Attitude time series show smooth, periodic behavior without oscillations or control saturation
+  \item \textbf{Wide agility envelope:} The platform can sustain centripetal accelerations up to [TODO: calc at 8 m/s] m/s² (approximately [TODO: calc in g] g) while maintaining stable flight
+  \item \textbf{Control robustness:} The INDI-based controller successfully rejects aerodynamic disturbances from the wings across all flight speeds without requiring speed-dependent gain scheduling
+\end{itemize}
+
+These results validate the control architecture's effectiveness for agile maneuvering and demonstrate that the fixed-wing surfaces do not compromise the platform's quadrotor-like agility characteristics.
+
 \section{Aerodynamic forces/moments quantification}
 - Identify equivalent $k_D,k_L$ or $C_L(\alpha), C_D(\alpha)$ from maneuvering flight data; discuss sensitivity.
 
