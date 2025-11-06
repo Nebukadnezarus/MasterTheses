@@ -15,7 +15,7 @@ The experiments address three objectives:
 The thrust-characterization procedure described in Section~\ref{sec:thrust-characterization} produced 975 measurements under the 6\,S 2\,P power configuration.
 After removing a constant $-0.996$\,N sensor bias, a quadratic model was fitted:
 \begin{equation}
-T = 5.15 \times 10^{-2}\,\text{RPM}^2 - 0.09\,\text{RPM},
+T = 5.15 \times 10^{-8}\,\text{RPM}^2 - 0.09 \times 10^{-3}\,\text{RPM},
 \label{eq:thrust-rpm-fit}
 \end{equation}
 with coefficient of determination $R^2 = 0.997$ (Figure~\ref{fig:thrust_vs_rpm}).
@@ -29,11 +29,11 @@ This mapping was used throughout all flight experiments to translate desired thr
   \begin{axis}[tumplot, xlabel={RPM [rev/min]}, ylabel={Thrust [N]}, width=0.8\textwidth]
       % Original scatter data points
       \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
-        table[x=rpm_motor1, y=force_z_N, col sep=comma]{data/thrust_map_raw_data.csv};
+        table[x expr=1000*\thisrow{rpm_motor1}, y=force_z_N, col sep=comma]{data/thrust_map_raw_data.csv};
       \addlegendentry{Measured data}
       % Quadratic fit curve
       \addplot[thick, TUMAccentOrange, no marks]
-        table[x=rpm, y=thrust_N_fitted, col sep=comma]{data/thrust_vs_rpm_quadratic_fit.csv};
+        table[x expr=1000*\thisrow{rpm}, y=thrust_N_fitted, col sep=comma]{data/thrust_vs_rpm_quadratic_fit.csv};
       \addlegendentry{Quadratic fit ($R^2=0.997$)}
     \end{axis}
   \end{tikzpicture}
@@ -47,15 +47,15 @@ This mapping was used throughout all flight experiments to translate desired thr
   \begin{axis}[tumplot, xlabel={Command [\%]}, ylabel={RPM [rev/min]}, width=0.8\textwidth]
       % Original scatter data points
       \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
-        table[x=cmd, y=rpm_motor1, col sep=comma]{data/thrust_map_raw_data.csv};
+        table[x=cmd, y expr=1000*\thisrow{rpm_motor1}, col sep=comma]{data/thrust_map_raw_data.csv};
       \addlegendentry{Measured data}
       % Linear fit line
       \addplot[thick, TUMAccentOrange, no marks]
-        table[x=cmd, y=rpm_fitted, col sep=comma]{data/rpm_vs_cmd_linear_fit.csv};
+        table[x=cmd, y expr=1000*\thisrow{rpm_fitted}, col sep=comma]{data/rpm_vs_cmd_linear_fit.csv};
       \addlegendentry{Linear fit ($R^2=0.991$)}
     \end{axis}
   \end{tikzpicture}
-  \caption{RPM vs Command with linear fit: $\text{RPM} = 19.26 \cdot \text{cmd} + 3.65$.}
+  \caption{RPM vs Command with linear fit: $\text{RPM} = 19260 \cdot \text{cmd} + 3650$.}
   \label{fig:rpm_vs_cmd}
 \end{figure}
 
@@ -523,7 +523,7 @@ The primary sources of uncertainty in the experimental coefficient identificatio
   \item \textbf{Angle of attack estimation}: Pitch angle from IMU assumes level flight; any vertical velocity introduces error in effective angle of attack
   \item \textbf{Thrust estimation}: Motor RPM-to-thrust mapping has $\pm$5\% uncertainty from the thrust stand calibration
   \item \textbf{Steady-state assumption}: Transient accelerations violate the force balance equations, requiring careful selection of quasi-steady flight segments
-  \item \textbf{Wing area definition}: Effective aerodynamic area may differ from geometric area due to fuselage blockage and tip effects. The measured lift forces were lower than expected from XFLR5 predictions when using the full geometric wing area in the $C_L$ calculation. To investigate this discrepancy, we recomputed $C_L$ using three different effective wing area assumptions: 30\%, 50\%, and 100\% of the geometric area ($S$). All flight tests were conducted with the same physical wing; these variations represent different hypotheses about what fraction of the geometric area contributes effectively to lift generation. The results (shown in Figures~\ref{fig:cl_comparison} and \ref{fig:drag_polar}) indicate that $S_{\text{eff}} = 0.5 S$ provides the best agreement with XFLR5 predictions, suggesting that approximately half of the geometric wing area is aerodynamically effective in the flight regime tested. This finding is consistent with significant fuselage blockage, wing-propeller interference effects, and the relatively low aspect ratio of the X-configuration.
+  \item \textbf{Wing area definition}: The measured lift forces are lower than expected from XFLR5 predictions when using the full geometric wing area in the $C_L$ calculation. This discrepancy is likely due to significant fuselage blockage, propeller-wing interference effects, and the relatively low aspect ratio of the X-configuration, all of which reduce the effective aerodynamic performance compared to isolated 2D airfoil analysis.
 \end{itemize}
 
 Despite these limitations, the experimental data provides valuable validation of the wing's aerodynamic contribution and confirms that the XFLR5 lift predictions are reasonably accurate for control and trajectory planning purposes. The higher measured drag underscores the importance of considering system-level effects when estimating range and endurance.
@@ -565,19 +565,13 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addlegendentry{AG25, $Re=1\times10^5$ (XFLR5)}
 \addplot[tumorange, thick, dashed] table[x=alpha, y=CL, col sep=comma] {data/airfoil_analysis/CL_vs_alpha_AG25_Re0.500.csv};
 \addlegendentry{AG25, $Re=5\times10^5$ (XFLR5)}
-% Experimental data - different wing area assumptions
+% Experimental data
 \addplot[only marks, mark=*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
-  table[x=alpha_deg, y=CL_0.3, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
-\addlegendentry{Exp. ($S_{\text{eff}} = 0.3 S$)}
-\addplot[only marks, mark=square*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
-  table[x=alpha_deg, y=CL_0.5, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
-\addlegendentry{Exp. ($S_{\text{eff}} = 0.5 S$)}
-\addplot[only marks, mark=triangle*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
-  table[x=alpha_deg, y=CL_1.0, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
-\addlegendentry{Exp. ($S_{\text{eff}} = S$)}
+  table[x=alpha_deg, y=CL, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
+\addlegendentry{Experimental}
 \end{axis}
 \end{tikzpicture}
-\caption{Lift coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers ($Re=1\times10^5$ and $Re=5\times10^5$), computed using XFLR5 with NCrit=5. Experimental data points from flight tests (green markers) are shown with three different effective wing area assumptions used in the $C_L$ calculation to account for observed lift deficiency. All experiments were conducted with the same physical wing; the variations represent different hypotheses about the aerodynamically effective area. The $S_{\text{eff}} = 0.5 S$ assumption shows the best agreement with XFLR5 predictions at operational angles of attack, suggesting that approximately half of the geometric wing area contributes effectively to lift generation. At $Re=1\times10^5$, the AG25 achieves maximum \(C_L \approx 1.20\) at \SI{10}{\degree}, while the NACA~0015 reaches \(C_L \approx 0.97\) at \SI{12}{\degree}.}
+\caption{Lift coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers ($Re=1\times10^5$ and $Re=5\times10^5$), computed using XFLR5 with NCrit=5. Experimental data points from flight tests (green markers) show lower lift coefficients than XFLR5 predictions, likely due to propeller-wing interference effects, fuselage blockage, and the relatively low aspect ratio of the X-configuration. At $Re=1\times10^5$, the AG25 achieves maximum \(C_L \approx 1.20\) at \SI{10}{\degree}, while the NACA~0015 reaches \(C_L \approx 0.97\) at \SI{12}{\degree}.}
 \label{fig:cl_comparison}
 \end{figure}
 
@@ -627,8 +621,9 @@ The experimental data points, shown as markers in the figures, demonstrate good 
   xlabel={Drag Coefficient, $C_D$ [-]},
   ylabel={Lift Coefficient, $C_L$ [-]},
   legend style={
-    at={(1.0,0.5)},
-    anchor=east
+    at={(0.5,1.05)},
+    anchor=south,
+    legend columns=2
   }
 ]
 % XFLR5 predictions
@@ -640,19 +635,13 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addlegendentry{AG25, $Re=1\times10^5$ (XFLR5)}
 \addplot[tumorange, thick, dashed] table[x=CD, y=CL, col sep=comma] {data/airfoil_analysis/drag_polar_AG25_Re0.500.csv};
 \addlegendentry{AG25, $Re=5\times10^5$ (XFLR5)}
-% Experimental data - different wing area assumptions
+% Experimental data
 \addplot[only marks, mark=*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
-  table[x=CD, y=CL_0.3, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
-\addlegendentry{Exp. ($S_{\text{eff}} = 0.3 S$)}
-\addplot[only marks, mark=square*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
-  table[x=CD, y=CL_0.5, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
-\addlegendentry{Exp. ($S_{\text{eff}} = 0.5 S$)}
-\addplot[only marks, mark=triangle*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
-  table[x=CD, y=CL_1.0, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
-\addlegendentry{Exp. ($S_{\text{eff}} = S$)}
+  table[x=CD, y=CL, col sep=comma] {data/aerodynamic_analysis/experimental_aerodynamic_coefficients.csv};
+\addlegendentry{Experimental}
 \end{axis}
 \end{tikzpicture}
-\caption{Drag polar comparison showing the relationship between lift and drag coefficients. Curves shifted toward the left and top indicate better aerodynamic efficiency (higher lift for given drag). Experimental data (green markers) represent the same flight tests analyzed with three different effective wing area assumptions in the $C_L$ calculation to explain observed lift deficiency. Drag coefficient $C_D$ is computed using the full geometric wing area for all cases. The $S_{\text{eff}} = 0.5 S$ assumption provides the best alignment with XFLR5 lift predictions, while the higher measured drag reflects system-level effects (fuselage drag, propeller interference) not captured in 2D airfoil analysis. At both Reynolds numbers, the AG25 demonstrates dramatically superior efficiency with the drag polar shifted significantly leftward compared to NACA~0015, achieving higher lift coefficients at substantially lower drag penalties.}
+\caption{Drag polar comparison showing the relationship between lift and drag coefficients. Curves shifted toward the left and top indicate better aerodynamic efficiency (higher lift for given drag). Experimental data (green markers) shows lower lift coefficients and higher drag coefficients than XFLR5 predictions, reflecting system-level effects including fuselage drag, propeller-wing interference, and three-dimensional flow effects not captured in 2D airfoil analysis. At both Reynolds numbers, the AG25 demonstrates dramatically superior efficiency with the drag polar shifted significantly leftward compared to NACA~0015, achieving higher lift coefficients at substantially lower drag penalties.}
 \label{fig:drag_polar}
 \end{figure}
 
