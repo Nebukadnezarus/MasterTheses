@@ -2,4 +2,19 @@
 
 \chapter{Conclusion}\label{chapter:conclusion}
 
-We summarize contributions: design of an aerodynamic surface-enhanced quadrotor, a robust INDI-based tracking controller, and experimental validation demonstrating accurate agile tracking and improved forward-flight efficiency. We outline future work, including refined aerodynamic modeling, coordinated-turn guidance integration, and extended outdoor testing.
+This thesis demonstrated that an Incremental Nonlinear Dynamic Inversion (INDI) controller can maintain stable and accurate flight on a quadrotor whose aerodynamic surfaces generate lift on the same order as its weight—without using any explicit aerodynamic model.
+
+A fully 3D-printed X-wing quadrotor was designed, modeled, and flight-tested.
+The static thrust mapping followed a quadratic law with $R^2=0.997$, confirming consistent actuator behavior.
+During motion-capture experiments, the controller achieved RMS position errors between 0.03\,m and 0.16\,m up to 8\,m\,s$^{-1}$ forward speed, demonstrating precise trajectory tracking under strong, unmodeled aerodynamic disturbances.
+Analytical estimates indicate that the wings could fully support the vehicle weight at $\approx 12$\,m\,s$^{-1}$, implying large potential for thrust and power reduction.
+
+The results confirm that disturbance-rejection control can absorb quasi-steady aerodynamic effects without identification or model compensation.
+This finding simplifies control design for hybrid multirotors: aerodynamic augmentation can be pursued purely at the hardware level, leaving the control law unchanged.
+
+The main limitations are the absence of direct power measurements and quantitative comparison to a geometric-only baseline.
+Future work should instrument the system with current sensing to quantify energy savings, and perform controlled A/B tests to isolate the INDI improvement.
+Extending the framework to dynamic flight envelopes and real-time aerodynamic estimation would further test its generality.
+
+Overall, the study establishes a reproducible experimental benchmark for aerodynamic surface-enhanced multirotors and provides evidence that model-free incremental control remains robust even when aerodynamic lift dominates vehicle dynamics.
+

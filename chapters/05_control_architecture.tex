@@ -2,114 +2,80 @@
 
 \chapter{Control Architecture}\label{chapter:control-architecture}
 
-This chapter presents the flight control system used on the X-wing quadrotor.
-The architecture combines (i) \emph{flatness-based reference generation} for dynamically
-feasible trajectories, (ii) a \emph{geometric outer loop} on $SE(3)$ that converts
-position and velocity errors into desired attitude and collective thrust, and
-(iii) an \emph{Incremental Nonlinear Dynamic Inversion (INDI)} inner loop that
-realizes the requested angular dynamics while rejecting unmodeled aerodynamic
-effects from the wings.
-The wings are not explicitly modeled; their influence is treated as a disturbance
-and compensated incrementally~\cite{Sieberling2010,vanKampen2018,Tzoumanikas2021}.
+The controller aims to maintain precise trajectory tracking on a multirotor whose aerodynamic forces are unmodeled but significant.
+The design therefore follows a minimal philosophy: \emph{compensate measured effects rather than predict them}.
+The architecture consists of a geometric outer loop for position control and an Incremental Nonlinear Dynamic Inversion (INDI) inner loop for attitude control.
+Aerodynamic forces from the fixed wings are never estimated or modeled; they are treated as slowly varying disturbances measured implicitly through the IMU.
+
+\section{Overview}\label{sec:ctrl-overview}
+The overall control stack operates in three layers:
+\begin{itemize}
+\item \textbf{Reference generation} – produces dynamically feasible position, velocity, and yaw trajectories using differential-flatness polynomials.
+\item \textbf{Geometric outer loop} – converts position/velocity errors into desired acceleration and attitude commands.
+\item \textbf{INDI inner loop} – tracks the desired angular rates by incrementally adjusting motor thrusts based on measured angular accelerations.
+\end{itemize}
+This separation allows the aerodynamic effects—lift, drag, and induced moments—to appear only as disturbances in the measured accelerations, where they are cancelled incrementally rather than modeled.
 
 \section{Reference Generation}\label{sec:ref-gen}
-Quadrotor dynamics are differentially flat with respect to
-$\mathbf{p}_d=[x_d,y_d,z_d]^\top$ and $\psi_d$.
-We generate $(\mathbf{p}_d,\dot{\mathbf{p}}_d,\ddot{\mathbf{p}}_d,\psi_d)$
-from a minimum-snap polynomial~\cite{Mellinger2011}.
-In forward flight, sideslip is reduced through a coordinated-turn law,
+The quadrotor dynamics are differentially flat with respect to position and yaw.
+Minimum-snap trajectories are generated offline or onboard using the method of Mellinger and Kumar~\cite{Mellinger2011}.
+In forward-flight experiments, the desired yaw rate was computed from a coordinated-turn condition
 \[
 \dot{\psi}_d \approx \frac{a_{y,d}}{V_d\cos\theta_d},
 \]
-which aligns the body $x$-axis with the velocity vector.
+aligning the vehicle's $x$-axis with its velocity vector and minimizing sideslip.
 
 \section{Geometric Outer Loop}\label{sec:outer}
-The outer loop maps position and velocity errors to a desired attitude $R_d\in SO(3)$
-and collective thrust $f_{\text{coll}}$~\cite{Goodarzi2015}.
-Nominal commanded acceleration is
+The outer loop computes a commanded acceleration
 \begin{equation}
-\mathbf{a}_c = \mathbf{k}_p\odot(\mathbf{p}_d-\mathbf{p})
-              + \mathbf{k}_v\odot(\dot{\mathbf{p}}_d-\mathbf{v})
-              + \ddot{\mathbf{p}}_d - \mathbf{g}.
+\mathbf{a}_c = \mathbf{K}_p(\mathbf{p}_d-\mathbf{p})
+             + \mathbf{K}_v(\dot{\mathbf{p}}_d-\dot{\mathbf{p}})
+             + \ddot{\mathbf{p}}_d - \mathbf{g},
 \label{eq:ac-nom}
 \end{equation}
-
-\section{Incremental Aerodynamic Compensation (Outer INDI Layer)}\label{sec:outer-indi}
-The controller estimates a residual between the thrust-induced specific force
-(from filtered motor speeds) and the IMU-measured specific force.
-That residual is rotated into the world frame and added to the commanded acceleration:
+which is converted to a desired attitude $R_d$ and collective thrust $f_{\text{coll}}$ via
 \begin{equation}
-\mathbf{a}_{\text{aero}} = R\!\left(\frac{f_{T,f}}{m}\mathbf{e}_3 - \mathbf{a}_{B,f}\right),
-\qquad
-\mathbf{a}_c \leftarrow \mathbf{a}_c + \mathbf{a}_{\text{aero}}
-\quad \text{if } z>0.5~\mathrm{m}.
-\label{eq:aero-comp-outer}
-\end{equation}
-This constitutes an \emph{incremental} aerodynamic feedforward identical in principle
-to INDI: rather than modeling lift or drag explicitly, the controller compensates
-their measured effect from the previous time step.
-As a result, quasi-steady aerodynamic forces vanish from the translational control law.
-
-The desired body $z$-axis is set to $\mathbf{z}_B^d=\mathbf{a}_c/\|\mathbf{a}_c\|$.
-The collective thrust is obtained by projecting the commanded acceleration onto
-the \emph{current} body $z$-axis,
-\begin{equation}
-f_{\text{coll}} = m\,\mathbf{a}_c^\top (R\mathbf{e}_3),
+f_{\text{coll}} = m\,\mathbf{a}_c^\top (R\mathbf{e}_3).
 \label{eq:thrust-proj}
 \end{equation}
-which prevents acceleration in the wrong direction under large attitude errors.
+
+To account for unmodeled aerodynamic lift, the measured specific-force residual between expected rotor thrust and IMU acceleration is incrementally added:
+\begin{equation}
+\mathbf{a}_{\text{corr}} = R\!\left(\frac{f_T}{m}\mathbf{e}_3 - \mathbf{a}_{\text{IMU}}\right).
+\label{eq:aero-comp-outer}
+\end{equation}
+The corrected acceleration command becomes $\mathbf{a}_c \leftarrow \mathbf{a}_c + \mathbf{a}_{\text{corr}}$.
+This outer INDI layer acts as a real-time aerodynamic feedforward: it cancels any steady lift or drag without identifying parameters.
 
 \section{INDI Inner Loop}\label{sec:indi}
-The inner loop enforces the commanded angular acceleration without an aerodynamic model.
-Over a short interval $\Delta t$,
+The inner loop enforces the commanded angular acceleration using incremental updates
 \begin{equation}
-\Delta\mathbf{y} = \mathbf{y}_{k+1}-\mathbf{y}_k
-               = B\,(\mathbf{u}_{k+1}-\mathbf{u}_k)
-               + (\mathbf{d}_{k+1}-\mathbf{d}_k),
+\Delta\mathbf{u} = B^{-1}(\dot{\boldsymbol{\omega}}_d - \dot{\boldsymbol{\omega}}_k),
+\label{eq:indi-update}
 \end{equation}
-where $\mathbf{y}$ is the measured angular acceleration proxy and $B$ the
-local control-effectiveness matrix.
-Since aerodynamic disturbances $\mathbf{d}$ change slowly compared to the control rate,
-$\Delta\mathbf{d}\!\approx\!0$ and
-\[
-\Delta\mathbf{y} \approx B\,\Delta\mathbf{u}.
-\]
-Thus the control update
-$\mathbf{u}_{k+1}=\mathbf{u}_k+B^{-1}(\mathbf{y}_{\text{des}}-\mathbf{y}_k)$
-implicitly cancels the aerodynamic contribution without modeling it.
+where $B$ is the local control-effectiveness matrix obtained from static identification.
+Because aerodynamic moments vary slowly relative to the 500\,Hz control rate, their difference $\Delta\mathbf{d}\approx 0$ over each step, and thus their influence cancels.
 
-\subsection{Why Aerodynamic Terms Are Irrelevant}
-Let the true dynamics be $\dot{\mathbf{y}}=f(\mathbf{y},\mathbf{u})+\mathbf{d}$.
-Classical NDI must model $\mathbf{d}$ explicitly.
-INDI instead computes the input increment
-\[
-\Delta\mathbf{u} = B^{-1}\big(\dot{\mathbf{y}}_{\text{des}}-\dot{\mathbf{y}}_k\big),
-\]
-using measured acceleration differences.
-Because $\mathbf{d}$ is approximately constant over $\Delta t$,
-its effect cancels:
-\[
-(\mathbf{d}_{k+1}-\mathbf{d}_k)\approx 0.
-\]
-Consequently, all quasi-steady aerodynamic forces and moments—lift, induced drag,
-or wing interference—are suppressed automatically.
-The controller reacts only to *changes* in measured acceleration, making an explicit
-aerodynamic model unnecessary while retaining high robustness.
+This property—rejection of quasi-steady disturbances—makes INDI well suited for aerodynamic surface-enhanced vehicles, where modeling the unsteady flow is impractical.
 
-\section{Controller Structure and Relation to Prior Work}\label{sec:controller-summary}
-The resulting control stack can be interpreted as a two-level INDI cascade:
-an outer geometric controller with incremental feedforward of aerodynamic
-disturbances and an inner INDI loop realizing angular dynamics.
-This configuration matches the most accurate setup in
-Sun~et al.~\cite{Sun2021}, where coupling a flatness-based outer loop with
-an INDI inner loop reduced position-tracking error by roughly 78 \% at
-flight speeds up to 20 m/s compared to pure differential-flatness control.
+\section{Implementation Details}\label{sec:implementation}
+\begin{itemize}
+\item \textbf{Software stack}: All control laws were implemented in ROS~1 (Noetic) on a Jetson Orin Nano, communicating via MAVLink with a Kakute H7 flight controller running modified Betaflight firmware.
+\item \textbf{Update rates}: Outer loop 300\,Hz; inner loop 300\,Hz; IMU 8\,kHz; motor commands sent at 8\,kHz DShot.
+\item \textbf{Sensor feedback}: Position and attitude from Vicon motion capture at 100\,Hz; angular rates and accelerations from the flight-controller IMU.
+\item \textbf{Filtering}: Outer-loop filter at 300\,Hz with 10\,Hz cut-off frequency for INDI residuals.
+\item \textbf{Latency}: End-to-end delay $\approx 10$--15\,ms, verified via timestamp comparison; acceptable within the INDI assumption of slow disturbance change.
+\end{itemize}
+
+\section{Stability and Design Logic}\label{sec:stability}
+No explicit aerodynamic model enters the control law; stability arises from the incremental formulation.
+Because both outer and inner loops respond only to \emph{changes} in measured acceleration, any quasi-steady aerodynamic component (e.g., lift from wings) vanishes from the control error.
+This design directly tests the thesis hypothesis: that accurate control is achievable on an aerodynamically augmented multirotor without aerodynamic parameter identification.
 
 \section{Summary}\label{sec:ctrl-summary}
-The architecture preserves the intuitive structure of a geometric quadrotor
-controller while inheriting the disturbance-rejection and aerodynamic robustness
-of INDI.  Quasi-steady aerodynamic effects are naturally eliminated through
-incremental updates, requiring no explicit aerodynamic model.
+The implemented controller combines the disturbance rejection of INDI with the geometric control structure of a conventional multirotor.
+Its novelty lies not in new mathematics but in the demonstration that this existing architecture remains stable and precise under strong, unmodeled aerodynamic loads.
+The following chapter details the experimental setup used to verify this claim.
 
 % --- References used in this chapter ---
-% \cite{Sieberling2010,vanKampen2018,Tzoumanikas2021,Goodarzi2015,Mellinger2011,Sun2021}
+% \cite{Mellinger2011}

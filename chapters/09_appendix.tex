@@ -1,0 +1,314 @@
+% !TeX root = ../main.tex
+
+\appendix
+
+\chapter{Supplementary Material}\label{chapter:appendix}
+
+\section{Detailed Bill of Materials}\label{sec:bom-detailed}
+
+This section provides a complete component list for the experimental X-wing quadrotor platform, including part numbers, specifications, and suppliers for reproducibility.
+
+\begin{table}[h]
+\centering
+\caption{Complete Bill of Materials (BOM) for the baseline experimental platform.}
+\label{tab:bom-detailed}
+\small
+\begin{tabularx}{\textwidth}{ll>{\raggedright\arraybackslash}X}
+\toprule
+Category & Component & Model / Key Specs \\
+\midrule
+\multicolumn{3}{l}{\textbf{Airframe}} \\
+Frame & Center frame & X-wing center frame, 3D-printed PLA \\
+Frame & Wing spars & Carbon fiber tubes, 10\,mm OD, 8\,mm ID \\
+Wings & Wing skins & Four fixed wings (length 450\,mm, chord 250\,mm; NACA~0015 airfoil), orthogonal layout ($90^{\circ}$ between adjacent wings); 3D-printed Bambu Lab PLA Aero; total projected horizontal area $S_\mathrm{t}\approx 0.318$\,m$^2$ \\
+\midrule
+\multicolumn{3}{l}{\textbf{Propulsion}} \\
+Motors & T-MOTOR VELOX V2808 ($\times$4) & KV1300, max thrust $\approx$22\,N each @ 6S \\
+Propellers & HQProp 7×3.5×3 ($\times$4) & 3-blade racing propeller (7", light grey) \\
+\midrule
+\multicolumn{3}{l}{\textbf{Avionics}} \\
+Flight Controller & Kakute H7 v1.5 & STM32H743, ICM-42688-P IMU @ 8\,kHz \\
+ESC & Holybro Tekko32 F4 4in1 & 4-in-1 ESC, 65A, DShot600/1200 capable \\
+\midrule
+\multicolumn{3}{l}{\textbf{Power}} \\
+Battery ($\times$2, parallel) & Tattu R-Line V5.0 6S 1400\,mAh & 150C discharge, XT60 connector; effective 6S 2800\,mAh (parallel) \\
+Companion Power & Tattu R-Line V3.0 4S 1800\,mAh & 120C discharge, XT60 connector \\
+\midrule
+\multicolumn{3}{l}{\textbf{Companion Computer}} \\
+Computer & NVIDIA Jetson Orin Nano 8\,GB & Ubuntu 20.04, ROS 1 Noetic \\
+\midrule
+\multicolumn{3}{l}{\textbf{Motion Capture}} \\
+Markers & Vicon markers ($\times$4) & 14\,mm diameter, asymmetric constellation \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Platform Variant Comparison}\label{sec:platform-comparison-detailed}
+
+Table~\ref{tab:platform-comparison-detailed} provides a detailed comparison between the baseline platform developed in this work and the improved variant developed by Pablo Kirby.
+
+\begin{table}[h]
+\centering
+\caption{Detailed comparison of baseline and improved X-wing platform variants.}
+\label{tab:platform-comparison-detailed}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+Parameter & Baseline Platform (This Work) & Improved Platform (Kirby, 2025) \\
+\midrule
+\textbf{Aerodynamics} & & \\
+Airfoil & NACA~0015 (symmetric) & AG25 (cambered) \\
+Dihedral/Anhedral & $\pm\SI{45}{\degree}$ (alternating) & $\pm\SI{20}{\degree}$ (alternating) \\
+Wing Span & \SI{450}{\milli\meter} & \SI{500}{\milli\meter} \\
+Wing Chord & \SI{250}{\milli\meter} & \SI{230}{\milli\meter} \\
+Wing Thickness & \SI{37.5}{\milli\meter} (15\% chord) & \SI{57.5}{\milli\meter} (25\% chord) \\
+Total Wing Area & \SI{0.318}{\meter\squared} & \SI{0.345}{\meter\squared} \\
+Aspect Ratio (per wing) & 1.8 & 2.17 \\
+\midrule
+\textbf{Structural} & & \\
+Wing Material & Bambu Lab PLA Aero & Bambu Lab PLA Aero \\
+Frame Material & Standard PLA & Standard PLA \\
+Motor Tilt & $\pm\SI{5}{\degree}$ & $\pm\SI{5}{\degree}$ \\
+Total Mass & \SI{2.5}{\kilogram} & \SI{2.8}{\kilogram} \\
+\midrule
+\textbf{Propulsion} & Identical & Identical \\
+Motors & T-MOTOR VELOX~V2808 (×4) & T-MOTOR VELOX~V2808 (×4) \\
+Propellers & HQProp 7×3.5×3 (×4) & HQProp 7×3.5×3 (×4) \\
+Battery & 6S 2P 2800\,mAh & 6S 2P 2800\,mAh \\
+\midrule
+\textbf{Avionics} & Identical & Identical \\
+Flight Controller & Kakute~H7 v1.5 & Kakute~H7 v1.5 \\
+Companion & Jetson Orin Nano 8\,GB & Jetson Orin Nano 8\,GB \\
+\midrule
+\textbf{Control} & Identical & Identical \\
+Control Architecture & INDI with aerodynamic compensation & INDI with aerodynamic compensation \\
+Control Frequency & 300\,Hz inner \& outer & 300\,Hz inner \& outer \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Thrust Characterization Details}\label{sec:thrust-map-detailed}
+
+\subsection{Test Procedure}
+
+Static thrust measurements were performed using the following procedure:
+
+\begin{enumerate}
+\item A single T-MOTOR VELOX V2808 motor with HQProp 7×3.5×3 propeller was mounted on a Rokubi Mini six-axis force--torque sensor using a custom 3D-printed fixture.
+\item The motor was powered through the same flight controller (Kakute H7) and ESC configuration used in flight to ensure identical DShot timing and behavior.
+\item Battery configuration: Two 6S 1400\,mAh Li-Po batteries connected in parallel (6S 2P), matching the flight configuration.
+\item Motor commands were swept from 0\% to 100\% throttle in 1\% increments.
+\item At each command level, the motor was allowed to stabilize for 1\,s, then force data were recorded for 2\,s and averaged.
+\item The test was repeated with all four motors installed on the vehicle (three fixed, one on force sensor) to capture realistic voltage sag effects.
+\item A total of 975 samples were recorded across the full throttle range.
+\end{enumerate}
+
+\subsection{Power Configuration Considerations}
+
+During the bench tests, we observed that the command-to-thrust relationship depends on how many motors are simultaneously powered from the battery due to load-dependent voltage sag and internal resistance effects.
+
+In particular, running only a single motor from a single 6S pack produced a slightly different mapping than powering all four motors from the flight-representative configuration with two 6S packs in parallel (6S 2P). The voltage sag under multi-motor load shifts the thrust curve downward by approximately 5--8\% at high throttle.
+
+Unless stated otherwise, the mapping used for control in flight was calibrated under the latter 6S 2P, four-motor-powered condition, and all subsequent thrust conversions refer to this configuration.
+
+\subsection{Curve Fitting}
+
+The measured thrust vs. motor command data were fitted with a second-order polynomial:
+\begin{equation}
+T(u) = a_2 u^2 + a_1 u + a_0,
+\end{equation}
+where $u \in [0,1]$ is the normalized command input and $T$ is the thrust in Newtons.
+
+For the RPM-based mapping used in the thesis:
+\begin{equation}
+T(\text{RPM}) = 5.15\times 10^{-2}\,\text{RPM}^2 - 0.09\,\text{RPM},
+\end{equation}
+with $R^2 = 0.997$.
+
+This empirical mapping was integrated into the control pipeline to convert desired thrust values from the INDI controller into per-motor DShot commands. The calibrated relationship improved the accuracy of total thrust estimation and allowed for energy-based efficiency analysis during flight tests.
+
+\section{Software Architecture Details}\label{sec:software-detailed}
+
+\subsection{System Architecture}
+
+The onboard software stack consists of ROS~1 Noetic running on the Jetson Orin Nano companion computer. The control architecture is divided into three main components:
+
+\begin{enumerate}
+\item \textbf{Ground Station} (Remote PC):
+\begin{itemize}
+\item ROS master node
+\item Trajectory generation and mission planning
+\item Real-time visualization (RViz)
+\item Manual override interface
+\item Data logging (rosbag)
+\end{itemize}
+
+\item \textbf{Companion Computer} (Jetson Orin Nano):
+\begin{itemize}
+\item Geometric outer loop controller (300\,Hz)
+\item INDI inner loop controller (300\,Hz)
+\item State estimation (Vicon feedback processing)
+\item MAVLink communication interface
+\item Local telemetry logging
+\end{itemize}
+
+\item \textbf{Flight Controller} (Kakute H7):
+\begin{itemize}
+\item Modified Betaflight firmware
+\item IMU data acquisition (8\,kHz)
+\item Motor RPM telemetry (DShot bidirectional)
+\item Battery voltage monitoring
+\item Motor command execution (DShot600, 8\,kHz update rate)
+\end{itemize}
+\end{enumerate}
+
+\subsection{Communication Protocols}
+
+\paragraph{Jetson $\leftrightarrow$ Ground Station:}
+\begin{itemize}
+\item Protocol: ROS 1 TCP/UDP
+\item Medium: Wi-Fi 802.11ac (5\,GHz)
+\item Bandwidth: $\approx$50\,Mbps sustained
+\item Latency: 5--15\,ms (local network)
+\end{itemize}
+
+\paragraph{Jetson $\leftrightarrow$ Kakute H7:}
+\begin{itemize}
+\item Protocol: MAVLink 2
+\item Medium: UART (serial)
+\item Baud rate: 921\,600\,bit/s
+\item Update rate: 300\,Hz (synchronized with control loop)
+\item Latency: $<$3\,ms
+\end{itemize}
+
+\subsection{State Estimation Pipeline}
+
+The state estimation pipeline used the Vicon motion capture system to provide real-time position and attitude feedback to the controller. In some experiments, an onboard Extended Kalman Filter (EKF) fused IMU data for state estimation backup.
+
+The Vicon system and onboard IMU operated in a consistent right-handed coordinate convention:
+\begin{itemize}
+\item \textbf{X-axis}: Forward (red in figures)
+\item \textbf{Y-axis}: Left
+\item \textbf{Z-axis}: Up
+\item \textbf{Euler angles}: Roll ($\phi$) about X, Pitch ($\theta$) about Y, Yaw ($\psi$) about Z
+\end{itemize}
+
+\subsection{Control Implementation}
+
+All flight maneuvers, including point-to-point transitions and trajectory tracking, were executed fully autonomously from predefined setpoints. The control logic ran entirely on the Jetson companion computer, with the flight controller acting only as a sensor interface and motor command relay.
+
+Manual override from the ground station was available for safety. Trajectories could be manually stopped and the vehicle landed or disarmed from the base station using a dedicated emergency stop button.
+
+\section{Test Facility Details}\label{sec:facilities-detailed}
+
+\subsection{Munich Indoor Arena}
+
+\begin{itemize}
+\item \textbf{Dimensions}: Approximately $7 \times 8$\,m flying volume
+\item \textbf{Vicon system}: 8 cameras
+\item \textbf{Sampling rate}: 200\,Hz
+\item \textbf{Position accuracy}: $\pm 2$\,mm
+\item \textbf{Safety features}: Safety nets, soft landing surface
+\item \textbf{Use cases}: Agility experiments (3\,g circle maneuvers, aggressive transitions)
+\end{itemize}
+
+\subsection{AIDA Hall (Reutlingen University)}
+
+\begin{itemize}
+\item \textbf{Dimensions}: Approximately $60 \times 45$\,m flying volume
+\item \textbf{Vicon system}: 24 cameras
+\item \textbf{Sampling rate}: 200\,Hz
+\item \textbf{Position accuracy}: $\pm 2$\,mm
+\item \textbf{Environment}: Indoor, still-air conditions, no wind sources
+\item \textbf{Use cases}: Steady forward-flight efficiency trials, high-speed tests (up to 20\,m/s)
+\end{itemize}
+
+\subsection{Test Protocol Details}
+
+\paragraph{Pre-flight:}
+\begin{enumerate}
+\item Battery charge verification ($>$95\% capacity)
+\item Vicon marker visibility check
+\item Ground station connection test
+\item Emergency stop procedure rehearsal
+\item Trajectory parameter verification
+\end{enumerate}
+
+\paragraph{Flight sequence:}
+\begin{enumerate}
+\item Autonomous take-off to 1.5\,m altitude
+\item Hover stabilization (10\,s)
+\item Trajectory execution (step response, circle, or straight line)
+\item Return to hover
+\item Autonomous landing
+\end{enumerate}
+
+\paragraph{Post-flight:}
+\begin{enumerate}
+\item Data integrity check (rosbag verification)
+\item Timestamp synchronization validation
+\item Outlier detection (position jumps, IMU spikes)
+\item Visual trajectory inspection
+\item Battery voltage log review
+\end{enumerate}
+
+\paragraph{Acceptance criteria:}
+\begin{itemize}
+\item No Vicon position jumps $>$50\,mm
+\item No IMU saturation events
+\item Timestamp monotonicity preserved
+\item No external disturbances observed (visual confirmation)
+\item Consistent trajectory shape across repeated runs
+\end{itemize}
+
+Each experiment was repeated 3--5 times until these criteria were met for at least 3 consecutive runs. Only the best-quality datasets were used for analysis.
+
+\section{Data Processing Pipeline}\label{sec:data-processing}
+
+All experiment data were logged in rosbag format and post-processed using custom Python scripts. The processing pipeline consisted of:
+
+\begin{enumerate}
+\item \textbf{Data extraction}: rosbag $\rightarrow$ CSV conversion using \texttt{rosbag\_pandas}
+\item \textbf{Timestamp alignment}: NTP-synchronized timestamps merged across Vicon and onboard telemetry
+\item \textbf{Filtering}: Low-pass Butterworth filter (40\,Hz cutoff) applied to Vicon velocity estimates
+\item \textbf{Thrust estimation}: Motor RPM $\rightarrow$ thrust conversion using calibrated mapping
+\item \textbf{Coordinate transformations}: Body frame $\leftrightarrow$ world frame conversions using measured attitude
+\item \textbf{Error calculation}: Trajectory tracking errors computed as $\|\mathbf{p}_d - \mathbf{p}\|$
+\item \textbf{Statistical analysis}: Mean, RMS, max error, standard deviation computed for each run
+\item \textbf{Visualization}: Matplotlib/pgfplots for publication-quality figures
+\end{enumerate}
+
+All processing scripts are documented in the \texttt{scripts/} directory of the thesis repository.
+
+\section{Manufacturing Details}\label{sec:manufacturing}
+
+\subsection{3D Printing Parameters}
+
+\paragraph{Wing skins (PLA Aero):}
+\begin{itemize}
+\item \textbf{Printer}: Bambu Lab X1-Carbon
+\item \textbf{Material}: Bambu Lab PLA Aero (lightweight variant)
+\item \textbf{Print mode}: Vase mode (single-wall spiral)
+\item \textbf{Layer height}: 0.2\,mm
+\item \textbf{Wall thickness}: 0.4\,mm (single perimeter)
+\item \textbf{Infill}: 0\% (hollow structure)
+\item \textbf{Flow ratio}: 0.6 
+\item \textbf{Print speed}: 100\,mm/s
+\item \textbf{Nozzle temperature}: 245°C
+\item \textbf{Bed temperature}: 60°C
+\item \textbf{Support}: None required
+\item \textbf{Print time}: $\approx$2.5\,h per wing
+\end{itemize}
+
+\paragraph{Frame components (standard PLA):}
+\begin{itemize}
+\item \textbf{Printer}: Bambu Lab X1-Carbon
+\item \textbf{Material}: Bambu Lab PLA Basic (black)
+\item \textbf{Layer height}: 0.2\,mm
+\item \textbf{Wall lines}: 4 (1.6\,mm total)
+\item \textbf{Infill}: 20\% grid
+\item \textbf{Print speed}: 150\,mm/s
+\item \textbf{Nozzle temperature}: 220°C
+\item \textbf{Bed temperature}: 60°C
+\item \textbf{Support}: Tree supports (auto-generated)
+\end{itemize}

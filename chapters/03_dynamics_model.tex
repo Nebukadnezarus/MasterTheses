@@ -2,7 +2,14 @@
 
 \chapter{Dynamics Model}\label{chapter:dynamics-model}
 
-This chapter presents the six-degree-of-freedom (6-DoF) rigid-body model for the X-wing quadrotor. The formulation uses a standard quadrotor body model augmented with a simple aerodynamic wing model (quadratic in airspeed) and lumps unmodeled effects into disturbance terms. The model is used for simulation, parameter identification, and to document the quantities that the controller deliberately does \emph{not} model explicitly (because INDI compensates them incrementally).
+The following model provides a formal reference for all forces and moments acting on the vehicle but is not employed directly by the controller. The purpose is two-fold:
+
+\begin{enumerate}
+  \item To define the dynamic relationships and notation used in subsequent analysis and simulation.
+  \item To quantify the order of magnitude of aerodynamic forces that the INDI controller must reject without an explicit model.
+\end{enumerate}
+
+The controller described in Chapter~\ref{chapter:control-architecture} relies solely on incremental acceleration feedback; none of the aerodynamic coefficients or equations derived here are required in real time.
 
 \section{List of Symbols}
 \begin{longtable}{p{0.15\textwidth}p{0.6\textwidth}p{0.15\textwidth}}
@@ -264,5 +271,7 @@ This relationship strictly applies to hover or near-hover conditions, assuming u
   \item Coefficient models $C_L=a_\alpha\alpha$, $C_Y=a_\beta\beta$, $C_D=C_{D0}+k C_L^2$ valid for the moderate $\alpha,\beta$ range used here.
 \end{itemize}
 
-\section{Remarks}
-This model is intentionally minimal: it captures the dominant couplings (gravity, thrust, wing lift/drag/side-force, aero moments via arm offsets) and provides a consistent basis for simulation and identification. The controller (Chapter~\ref{chapter:control-architecture}) does not require the explicit aerodynamic terms because INDI operates on incremental acceleration changes, which suppress quasi-steady aerodynamic effects.
+\section{Summary and Outlook}
+The presented six-degree-of-freedom equations define a consistent reference for the vehicle's translational and rotational dynamics. Aerodynamic terms were included only to quantify expected disturbance magnitudes---order of lift, drag, and pitching moments---so that the later control analysis can assess whether these effects are sufficiently slow and quasi-steady to be rejected by INDI. No aerodynamic coefficients or force models are used online; they serve purely for interpretation and comparison.
+
+With the governing relationships and notation established, the next step is to translate this abstract model into a physical platform whose geometry and mass distribution match the assumed parameters. The following chapter therefore details the mechanical design and manufacturing of the X-wing quadrotor, showing how the chosen dimensions, airfoil, and dihedral angles realize the modeled reference frame in practice.
