@@ -1,12 +1,9 @@
 \chapter{\abstractname}
 
-This thesis presents the design, modeling, and experimental validation of an X-wing hybrid aerial platform that combines quadrotor vertical take-off and landing (VTOL) capability with fixed-wing aerodynamic efficiency. The platform features four wings arranged in an X-configuration at \SI{45}{\degree} dihedral, providing passive lift augmentation during forward flight while maintaining full quadrotor control authority.
+This thesis presents the design, modeling, and experimental validation of an X-wing hybrid aerial platform that combines quadrotor vertical take-off and landing (VTOL) capability with fixed-wing aerodynamic efficiency. The platform features four wings arranged in an X-configuration at \SI{45}{\degree} dihedral, providing passive lift that reduces required rotor thrust during forward flight.
 
 A comprehensive dynamics model incorporating aerodynamic forces and moments is developed and integrated with an Incremental Nonlinear Dynamic Inversion (INDI) control architecture. The controller requires no explicit aerodynamic model and treats wing-generated forces as bounded disturbances, enabling robust trajectory tracking across the entire flight envelope from hover to high-speed cruise.
 
-Experimental validation was conducted in a motion capture arena with a \SI{2.5}{\kilogram} prototype featuring NACA~0015 airfoils. Thrust characterization yielded the mapping $T = 5.15 \times 10^{-6} \cdot \text{RPM}^2 - 0.090 \times 10^{-2} \cdot \text{RPM}$ (N) with $R^2 = 0.997$. Flight tests demonstrated stable, accurate tracking up to \SI{8}{\meter\per\second} with RMS position errors between \SI{0.03}{\meter} and \SI{0.16}{\meter}. 
+Experimental validation was conducted in a motion capture arena with a \SI{2.5}{\kilogram} prototype featuring NACA~0015 airfoils. Thrust characterization yielded the mapping $T = 5.15 \times 10^{-6} \cdot \text{RPM}^2 - 0.090 \times 10^{-2} \cdot \text{RPM}$ (N) with $R^2 = 0.997$. Flight tests demonstrated stable, accurate tracking up to \SI{8}{\meter\per\second} with RMS position errors below \SI{0.24}{\meter}, sustaining centripetal accelerations up to 2.8g, demonstrating stable control under strong unmodeled aerodynamic loads and indicative rotor unloading.
 
-Aerodynamic coefficient identification from flight data revealed that the effective wing area is approximately 50\% of the geometric area due to fuselage blockage and interference effects. At \SI{9}{\meter\per\second} cruise speed, the wings reduced rotor power requirements by approximately 12\% compared to conventional quadrotor flight. An optimized AG25 airfoil variant achieved 50\% power savings at the same cruise condition, demonstrating the potential for substantial efficiency gains through aerodynamic optimization.
-
-The results verify that INDI can maintain precise control on an aerodynamically augmented quadrotor without requiring explicit aerodynamic modeling, validating the hybrid X-wing architecture as a viable approach for extended-range VTOL applications.
-
+Electrical power was not measured; results report thrust-based rotor-load reduction rather than direct energy efficiency. 

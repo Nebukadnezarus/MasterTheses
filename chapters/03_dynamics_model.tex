@@ -185,6 +185,7 @@ Aerodynamic force in $\mathcal{B}$:
 \;+\; \underbrace{q S\,C_Y(\beta)\,\hat{\mathbf{y}}_S}_{\text{side}}.
 \label{eq:Faero}
 \end{equation}
+The aerodynamic forces in~\eqref{eq:Faero} are used only for off-line analysis; they are not used in the controller.
 
 \paragraph{Controller relevance.}
 These aerodynamic forces are \emph{not} modeled in the controller; they are treated as disturbances. INDI cancels their quasi-steady contribution via incremental updates (Chapter~\ref{chapter:control-architecture}).
@@ -261,6 +262,8 @@ P \propto \Omega^3.
 Thus, reducing rotor speed by 20\% results in a power reduction of roughly $(0.8)^3 \approx 0.51$, or about 49\% lower power consumption—an important efficiency benefit when part of the lift is provided by wings.
 
 This relationship strictly applies to hover or near-hover conditions, assuming uniform inflow and negligible profile and parasitic losses. In forward or edgewise flight, blade-element momentum theory (BEMT) or CFD analyses are required for accurate power prediction, but the cubic scaling remains a useful first-order engineering approximation for small deviations around hover.
+
+The cubic relation is used solely as a qualitative reference. Electrical current and torque were not measured; thus, numerical efficiency claims in later chapters are limited to thrust-based proxies.
 
 \section{Assumptions and Simplifications}
 \begin{itemize}

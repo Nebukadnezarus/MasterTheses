@@ -111,22 +111,6 @@ In particular, running only a single motor from a single 6S pack produced a slig
 
 Unless stated otherwise, the mapping used for control in flight was calibrated under the latter 6S 2P, four-motor-powered condition, and all subsequent thrust conversions refer to this configuration.
 
-\subsection{Curve Fitting}
-
-The measured thrust vs. motor command data were fitted with a second-order polynomial:
-\begin{equation}
-T(u) = a_2 u^2 + a_1 u + a_0,
-\end{equation}
-where $u \in [0,1]$ is the normalized command input and $T$ is the thrust in Newtons.
-
-For the RPM-based mapping used in the thesis:
-\begin{equation}
-T(\text{RPM}) = 5.15\times 10^{-2}\,\text{RPM}^2 - 0.09\,\text{RPM},
-\end{equation}
-with $R^2 = 0.997$.
-
-This empirical mapping was integrated into the control pipeline to convert desired thrust values from the INDI controller into per-motor DShot commands. The calibrated relationship improved the accuracy of total thrust estimation and allowed for energy-based efficiency analysis during flight tests.
-
 \section{Software Architecture Details}\label{sec:software-detailed}
 
 \subsection{System Architecture}

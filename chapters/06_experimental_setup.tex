@@ -81,21 +81,17 @@ All controller tuning and test results presented in this thesis refer to the bas
 
 \section{Thrust Characterization}\label{sec:thrust-characterization}
 
-Static thrust measurements were performed on a custom rig using a six-axis Rokubi Mini force--torque sensor (Figure~\ref{fig:force_test_stand}).
-A single motor was driven through the same Betaflight/DShot interface used in flight to ensure identical timing behavior.
-
-A total of 975 samples were recorded across the full throttle range under the 6\,S 2\,P configuration to include battery voltage sag.
-The resulting quadratic mapping
-\begin{equation}
-T = 5.15\times 10^{-2}\,\text{RPM}^2 - 0.09\,\text{RPM}
-\end{equation}
-achieved $R^2=0.997$.
-This mapping was integrated into the controller for thrust estimation and energy-related post-analysis.
+Static thrust measurements were performed on a custom test stand using a six-axis Rokubi Mini force--torque sensor (Figure~\ref{fig:force_test_stand}).
+To ensure realistic battery voltage sag matching actual flight conditions, all four motors were powered simultaneously from the flight battery (6\,S 2\,P configuration) with only one motor mounted on the force sensor.
+Motors were driven through the same Betaflight/DShot interface used in flight to ensure identical timing and response characteristics.
+This methodology guarantees that the measured RPM-to-thrust relationship accurately reflects the thrust produced during flight for a given motor command, accounting for realistic electrical loading and voltage drop.
+The measured mapping is used throughout the experiments for thrust estimation from motor telemetry.
+Full characterization methodology and results are presented in Section~\ref{sec:thrust-identification}.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.7\linewidth,angle=-90]{figures/force_test_stand.jpg}
-\caption{Static thrust characterization test stand with motor mounted on Rokubi Mini force--torque sensor.}
+\caption{Static thrust characterization test stand with motor mounted on Rokubi Mini force--torque sensor. All four motors were powered simultaneously from the flight battery to replicate realistic voltage sag, with one motor on the sensor.}
 \label{fig:force_test_stand}
 \end{figure}
 
@@ -103,7 +99,7 @@ This mapping was integrated into the controller for thrust estimation and energy
 
 All control logic ran on the Jetson companion computer under ROS~1 (Noetic).
 The geometric + INDI stack executed at 300\,Hz inner-loop and 300\,Hz outer-loop frequencies.
-Data streams between Jetson and Kakute used MAVLink~2 over UART (921\,kbit/s).
+Data streams between Jetson and Kakute used MAVLink over UART.
 
 The flight controller relayed IMU data (8\,kHz) and per-motor RPM to the Jetson.
 End-to-end command latency, measured via timestamp correlation, was $\approx 12$\,ms—short enough to satisfy the INDI assumption that disturbance changes are slow relative to the control rate.
