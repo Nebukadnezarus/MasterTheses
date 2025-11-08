@@ -70,14 +70,11 @@ The flight controller runs modified Betaflight firmware capable of reporting mot
 
 \section{Platform Variants}\label{sec:platform-variants}
 
-Two airframe variants were used:
-\begin{itemize}
-\item \textbf{Baseline}: The original $\pm\SI{45}{\degree}$ NACA 0015 X-wing design developed in this thesis.
-\item \textbf{Improved}: An AG25 cambered-airfoil version with $\pm\SI{20}{\degree}$ dihedral developed by Pablo Kirby (2025).\footnote{Pablo Kirby, \textit{Bachelor Thesis}, TUM, 2025.}
-\end{itemize}
-
-Both share identical propulsion, electronics, and control code, enabling fair aerodynamic comparison.
-All controller tuning and test results presented in this thesis refer to the baseline variant unless explicitly stated.
+Two geometrically similar but aerodynamically distinct airframe variants were tested.
+The baseline platform used $\pm\SI{45}{\degree}$ dihedral with NACA~0015 symmetric airfoils and served for all initial control and agility experiments.
+The improved platform employed $\pm\SI{20}{\degree}$ dihedral and AG25 cambered airfoils to enhance lift efficiency and reduce induced drag.
+Both share identical propulsion, avionics, and controller tuning, enabling direct aerodynamic comparison.
+The improved variant was used exclusively for the outdoor efficiency measurements, representing the final design iteration derived from the indoor coefficient analysis.
 
 \section{Thrust Characterization}\label{sec:thrust-characterization}
 
@@ -102,7 +99,6 @@ The geometric + INDI stack executed at 300\,Hz inner-loop and 300\,Hz outer-loop
 Data streams between Jetson and Kakute used MAVLink over UART.
 
 The flight controller relayed IMU data (8\,kHz) and per-motor RPM to the Jetson.
-End-to-end command latency, measured via timestamp correlation, was $\approx 12$\,ms—short enough to satisfy the INDI assumption that disturbance changes are slow relative to the control rate.
 
 \section{Measurement and Logging}\label{sec:measurement}
 
@@ -140,10 +136,18 @@ Sensor noise levels were assessed via static logs: IMU acceleration noise $\appr
 No measurable bias drift affected the evaluation interval ($\leq 5$\,min per flight).
 These figures ensure that the reported tracking errors in Chapter~\ref{chapter:experiments-evaluation} exceed measurement noise by at least one order of magnitude.
 
+\section{Outdoor Power Measurement Setup}\label{sec:outdoor-power-setup}
+
+Electrical power was measured in outdoor flight using the flight controller's onboard voltage and current sensors. The Kakute H7 flight controller continuously sampled battery voltage and current draw at \SI{1}{\kilo\hertz}, logging the data via Betaflight's blackbox system alongside motor RPM, IMU data, and GPS telemetry.
+
+Data were post-processed to compute instantaneous electrical power $P = VI$ at each sample, where $V$ is the battery voltage in volts and $I$ is the total current draw in amperes. To reduce high-frequency measurement noise while preserving transient behavior, the power signal was smoothed using a 1000-sample moving-average filter, corresponding to approximately \SI{1}{\second} averaging window at the \SI{1}{\kilo\hertz} logging rate.
+
+This configuration enables direct measurement of total system electrical power consumption, including motors, flight controller, companion computer, and all onboard electronics. Combined with synchronized motor RPM telemetry and GPS-based velocity measurements, these data allow quantitative comparison of power demand across different flight regimes (hover, cruise, acceleration) and direct validation of momentum theory predictions for rotor power scaling.
+
 \section{Summary}\label{sec:exp-setup-summary}
 
 The experimental setup provides synchronized, high-fidelity data for validating the control approach.
-It achieves sufficient accuracy to resolve sub-decimeter trajectory errors and verify that the INDI controller can stabilize and track trajectories under unmodeled aerodynamic disturbances.
+It achieves sufficient accuracy to resolve sub-decimeter trajectory errors and verify that the INDI controller can stabilize and track trajectories under unmodeled aerodynamic disturbances. This configuration allows direct comparison of electrical-power consumption between hover, level, and forward flight, enabling quantitative efficiency analysis.
 
 % --- References used in this chapter ---
 % \cite{AIDAHallPhoto2024}

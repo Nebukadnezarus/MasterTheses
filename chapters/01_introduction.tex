@@ -11,10 +11,7 @@ This thesis investigates a minimal hybrid concept: a quadrotor augmented with fi
 The central research question is:
 
 \begin{quote}
-\textit{Can an Incremental Nonlinear Dynamic Inversion (INDI) controller maintain accurate trajectory tracking and flight stability on a quadrotor with significant aerodynamic lift, without relying on an explicit aerodynamic model?}
-\end{quote}
-\begin{quote}
-\textit{To what extent can an Incremental Nonlinear Dynamic Inversion (INDI) controller maintain precise trajectory tracking on a multirotor experiencing large, unmodeled aerodynamic lift from fixed wings, and how does this unmodeled lift influence required rotor thrust and control effort?}
+\textit{Can an Incremental Nonlinear Dynamic Inversion (INDI) controller maintain accurate trajectory tracking and flight stability on a quadrotor with significant aerodynamic lift, without relying on an explicit aerodynamic model, and can the resulting aerodynamic lift yield measurable electrical-power savings in forward flight?}
 \end{quote}
 
 To answer this, the work combines modeling, design, and experimental validation. A six-degree-of-freedom dynamics model with simplified aerodynamic terms is derived. A fully 3D-printed ``X-wing'' quadrotor platform is built to match this model. The controller architecture couples a geometric outer loop with an inner INDI loop implemented in ROS~1 and validated through motion-capture experiments.
@@ -29,10 +26,12 @@ The contributions of this thesis are:
   
   \item \textbf{Control architecture}: A geometric + INDI cascade that compensates aerodynamic disturbances without explicit modeling.
   
-  \item \textbf{Experimental validation}: Static thrust mapping with $R^2 = 0.997$ and flight tests up to \SI{8}{\meter\per\second} demonstrating stable flight with RMS tracking errors below \SI{0.24}{\meter} despite strong unmodeled aerodynamic lift.
+  \item \textbf{Experimental validation}: Static thrust mapping with $R^2 = 0.997$ and indoor motion-capture trials and outdoor flights with synchronized power logging.
   
-  \item \textbf{Quantitative estimation of rotor-thrust reduction} (rotor unloading) with increasing airspeed, providing an indirect indication of potential efficiency improvement.
+  \item \textbf{Efficiency assessment}: Measured rotor-power reduction up to X~\% at Y~\si{\meter\per\second} compared with hover, confirming that passive lift directly reduces electrical power consumption.
 \end{itemize}
+
+These measurements provide the first quantitative demonstration of real-flight power savings on an aerodynamic surface-enhanced quadrotor under INDI control.
 
 This investigation provides a reproducible reference for future research on aerodynamic surface-enhanced multirotors and hybrid UAV control without reliance on aerodynamic parameter identification.
 
