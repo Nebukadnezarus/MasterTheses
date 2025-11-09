@@ -65,7 +65,7 @@ A detailed comparison of the NACA~0015 baseline airfoil against an improved AG25
 
 The propulsion system uses T-MOTOR VELOX V2808 motors with HQProp 7$\times$3.5$\times$3 propellers, producing up to 22\,N static thrust per motor. The total thrust-to-weight ratio exceeds 3, allowing aggressive maneuvers and ensuring that aerodynamic loads never saturate actuator authority.
 
-Motors are tilted outward by $5^{\circ}$ to enhance yaw torque. The corresponding geometry is embedded in the allocation matrix used by the controller; no additional coupling compensation is required. Static thrust characterization (Chapter~\ref{chapter:experiments-evaluation}, Section~\ref{sec:thrust_map_results}) confirms a quadratic thrust--RPM relation with $R^2 = 0.997$, validating consistency between analytical assumptions and measured performance.
+Motors are tilted outward by $5^{\circ}$ to enhance yaw torque. The corresponding geometry is embedded in the allocation matrix used by the controller; no additional coupling compensation is required. Static thrust characterization (Chapter~\ref{chapter:experiments-evaluation}, Section~\ref{sec:thrust-identification}) confirms a quadratic thrust--RPM relation with $R^2 = 0.997$, validating consistency between analytical assumptions and measured performance.
 
 The complete airframe mass, including avionics and batteries, is $\approx 2.5$\,kg. The center of gravity lies at the geometric center, aligned with the intersection of the four wing roots, minimizing trim moments during hover.
 
@@ -73,8 +73,7 @@ The complete airframe mass, including avionics and batteries, is $\approx 2.5$\,
 
 The X-wing configuration provides a mechanically simple and dynamically symmetric platform in which aerodynamic forces are large enough to challenge the controller but not strong enough to destabilize the system. The design therefore fulfills the thesis objective: to expose an INDI-controlled quadrotor to significant unmodeled aerodynamic effects without introducing additional actuation or transition mechanisms.
 
-A second airframe variant was later developed to improve aerodynamic efficiency and stability in forward flight.
+A second airframe variant was later developed to improve aerodynamic efficiency in forward flight.
 This refined configuration reduced the dihedral from $\pm 45^{\circ}$ to $\pm 20^{\circ}$ and replaced the NACA~0015 airfoil with an AG25 profile.
 The lower dihedral reduces projected area loss and induced drag, while the AG25's cambered geometry increases lift-to-drag ratio at typical cruise Reynolds numbers.
 The aerodynamic coefficient and agility analyses in Chapter~\ref{chapter:experiments-evaluation} include both configurations, while the outdoor power-efficiency validation employs the refined AG25 design to quantify the performance of the final, optimized prototype.
-This shows a deliberate engineering evolution---not an inconsistency.

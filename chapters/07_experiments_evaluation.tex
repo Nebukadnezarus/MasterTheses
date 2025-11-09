@@ -13,7 +13,7 @@ The experiments address three objectives:
 \section{Static Thrust Identification}\label{sec:thrust-identification}
 
 The thrust-characterization procedure described in Section~\ref{sec:thrust-characterization} produced 975 measurements under the 6\,S 2\,P power configuration.
-After removing a constant $-0.996$\,N sensor bias, a quadratic model was fitted:
+With that a quadratic model was fitted:
 \begin{equation}
 T = 5.15 \times 10^{-8}\,\text{RPM}^2 - 0.09 \times 10^{-3}\,\text{RPM},
 \label{eq:thrust-rpm-fit}
@@ -413,7 +413,11 @@ The experimental data points, shown as markers in the figures, demonstrate good 
   height=0.5\textwidth,
   xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
   ylabel={Lift Coefficient, $C_L$ [-]},
-  legend style={at={(0.5,-0.25)}, anchor=north, legend columns=2},
+  legend style={
+    at={(0.5,1.05)},
+    anchor=south,
+    legend columns=2
+  },
   grid=major,
 ]
 % XFLR5 predictions
@@ -426,10 +430,10 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addplot[tumorange, thick, dashed] table[x=alpha, y=CL, col sep=comma] {data/airfoil_analysis/CL_vs_alpha_AG25_Re0.500.csv};
 \addlegendentry{AG25, $Re=5\times10^5$ (XFLR5)}
 % Experimental data
-\addplot[only marks, mark=*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
+\addplot[only marks, mark=*, mark size=4pt, tumblue, mark options={solid}] 
   table[x=alpha_deg, y=CL, col sep=comma] {data/aerodynamic_analysis/NACA0015_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{NACA 0015 (Experimental)}
-\addplot[only marks, mark=square*, mark size=4pt, TUMAccentPink, mark options={solid}] 
+\addplot[only marks, mark=square*, mark size=4pt, tumorange, mark options={solid}] 
   table[x=alpha_deg, y=CL, col sep=comma] {data/aerodynamic_analysis/AG25_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
@@ -448,7 +452,11 @@ The experimental data points, shown as markers in the figures, demonstrate good 
   height=0.5\textwidth,
   xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
   ylabel={Drag Coefficient, $C_D$ [-]},
-  legend style={at={(0.5,-0.25)}, anchor=north, legend columns=2},
+  legend style={
+    at={(0.5,1.05)},
+    anchor=south,
+    legend columns=2
+  },
   grid=major,
 ]
 % XFLR5 predictions
@@ -461,15 +469,15 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addplot[tumorange, thick, dashed] table[x=alpha, y=CD, col sep=comma] {data/airfoil_analysis/CD_vs_alpha_AG25_Re0.500.csv};
 \addlegendentry{AG25, $Re=5\times10^5$ (XFLR5)}
 % Experimental data
-\addplot[only marks, mark=*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
+\addplot[only marks, mark=*, mark size=4pt, tumblue, mark options={solid}] 
   table[x=alpha_deg, y=CD, col sep=comma] {data/aerodynamic_analysis/NACA0015_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{NACA 0015 (Experimental)}
-\addplot[only marks, mark=square*, mark size=4pt, TUMAccentPink, mark options={solid}] 
+\addplot[only marks, mark=square*, mark size=4pt, tumorange, mark options={solid}] 
   table[x=alpha_deg, y=CD, col sep=comma] {data/aerodynamic_analysis/AG25_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Drag coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers. Experimental data from flight tests shows higher drag than XFLR5 wing-only simulations, as expected since the experimental values include additional system-level drag sources not present in the simulation: fuselage parasite drag, propeller-induced drag, propeller-wing interference, and landing gear. The XFLR5 predictions represent wing drag only. NACA~0015 experimental data (green circles) and AG25 experimental data (pink squares) both demonstrate this expected trend. At $Re=1\times10^5$, the AG25 wing achieves minimum \(C_D \approx 0.011\) near \(\alpha = \SI{-1}{\degree}\), significantly lower than the NACA~0015's \(C_D \approx 0.015\) at \(\alpha = \SI{0}{\degree}\). The AG25 demonstrates superior low-drag characteristics across the operational angle of attack range.}
+\caption{Drag coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers. Experimental data from flight tests (green markers) shows higher drag than XFLR5 wing-only simulations, as expected since the experimental values include additional system-level drag sources not present in the simulation: fuselage parasite drag, propeller-induced drag, propeller-wing interference, and landing gear. The XFLR5 predictions represent wing drag only. At $Re=1\times10^5$, the AG25 wing achieves minimum \(C_D \approx 0.011\) near \(\alpha = \SI{-1}{\degree}\), significantly lower than the NACA~0015's \(C_D \approx 0.015\) at \(\alpha = \SI{0}{\degree}\). The AG25 demonstrates superior low-drag characteristics across the operational angle of attack range.}
 \label{fig:cd_comparison}
 \end{figure}
 
@@ -483,8 +491,11 @@ The experimental data points, shown as markers in the figures, demonstrate good 
   height=0.5\textwidth,
   xlabel={Drag Coefficient, $C_D$ [-]},
   ylabel={Lift Coefficient, $C_L$ [-]},
-  legend style={at={(0.5,-0.25)}, anchor=north, legend columns=2},
-  grid=major,
+  legend style={
+    at={(0.5,1.05)},
+    anchor=south,
+    legend columns=2
+  }
 ]
 % XFLR5 predictions
 \addplot[tumblue, thick] table[x=CD, y=CL, col sep=comma] {data/airfoil_analysis/drag_polar_NACA0015_Re0.100.csv};
@@ -496,15 +507,15 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addplot[tumorange, thick, dashed] table[x=CD, y=CL, col sep=comma] {data/airfoil_analysis/drag_polar_AG25_Re0.500.csv};
 \addlegendentry{AG25, $Re=5\times10^5$ (XFLR5)}
 % Experimental data
-\addplot[only marks, mark=*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
+\addplot[only marks, mark=*, mark size=4pt, tumblue, mark options={solid}] 
   table[x=CD, y=CL, col sep=comma] {data/aerodynamic_analysis/NACA0015_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{NACA 0015 (Experimental)}
-\addplot[only marks, mark=square*, mark size=4pt, TUMAccentPink, mark options={solid}] 
+\addplot[only marks, mark=square*, mark size=4pt, tumorange, mark options={solid}] 
   table[x=CD, y=CL, col sep=comma] {data/aerodynamic_analysis/AG25_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Drag polar comparison showing the relationship between lift and drag coefficients. Curves shifted toward the left and top indicate better aerodynamic efficiency (higher lift for given drag). Experimental data achieves lift coefficients matching XFLR5 predictions but with higher drag coefficients, as expected since the experimental values include complete system drag (fuselage, propellers, landing gear, and propeller-wing interference) while XFLR5 simulates wing drag only. NACA~0015 experimental data (green circles) and AG25 experimental data (pink squares) both show this trend. At both Reynolds numbers, the AG25 demonstrates dramatically superior wing efficiency with the drag polar shifted significantly leftward compared to NACA~0015, achieving higher lift coefficients at substantially lower drag penalties.}
+\caption{Drag polar comparison showing the relationship between lift and drag coefficients. Curves shifted toward the left and top indicate better aerodynamic efficiency (higher lift for given drag). Experimental data (green markers) achieves lift coefficients matching XFLR5 predictions but with higher drag coefficients, as expected since the experimental values include complete system drag (fuselage, propellers, landing gear, and propeller-wing interference) while XFLR5 simulates wing drag only. At both Reynolds numbers, the AG25 demonstrates dramatically superior wing efficiency with the drag polar shifted significantly leftward compared to NACA~0015, achieving higher lift coefficients at substantially lower drag penalties.}
 \label{fig:drag_polar}
 \end{figure}
 
@@ -518,7 +529,11 @@ The experimental data points, shown as markers in the figures, demonstrate good 
   height=0.5\textwidth,
   xlabel={Angle of Attack, $\alpha$ [\si{\degree}]},
   ylabel={Lift-to-Drag Ratio, $L/D$ [-]},
-  legend style={at={(0.5,-0.25)}, anchor=north, legend columns=2},
+  legend style={
+    at={(0.5,1.05)},
+    anchor=south,
+    legend columns=2
+  },
   grid=major,
 ]
 % XFLR5 predictions
@@ -531,15 +546,15 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addplot[tumorange, thick, dashed] table[x=alpha, y=LD, col sep=comma] {data/airfoil_analysis/LD_vs_alpha_AG25_Re0.500.csv};
 \addlegendentry{AG25, $Re=5\times10^5$ (XFLR5)}
 % Experimental data
-\addplot[only marks, mark=*, mark size=4pt, TUMAccentGreen, mark options={solid}] 
+\addplot[only marks, mark=*, mark size=4pt, tumblue, mark options={solid}] 
   table[x=alpha_deg, y=L_D_ratio, col sep=comma] {data/aerodynamic_analysis/NACA0015_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{NACA 0015 (Experimental)}
-\addplot[only marks, mark=square*, mark size=4pt, TUMAccentPink, mark options={solid}] 
+\addplot[only marks, mark=square*, mark size=4pt, tumorange, mark options={solid}] 
   table[x=alpha_deg, y=L_D_ratio, col sep=comma] {data/aerodynamic_analysis/AG25_experimental_aerodynamic_coefficients.csv};
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Lift-to-drag ratio comparison highlighting the aerodynamic efficiency of both airfoils. Experimental data shows lower L/D ratios than XFLR5 wing-only predictions due to additional system drag sources (fuselage, propellers, landing gear) not included in the wing simulation. The XFLR5 curves represent wing performance only. NACA~0015 experimental data (green circles) and AG25 experimental data (pink squares) both demonstrate this expected trend. At $Re=1\times10^5$, the AG25 wing achieves a remarkable maximum L/D of 53.0 at $\alpha \approx \SI{5}{\degree}$, with L/D ratios exceeding 50 between \SI{4}{\degree} and \SI{6}{\degree}—substantially higher than the NACA~0015 wing's maximum L/D of 37.1 at \SI{6}{\degree}. The experimental measurements at higher angles of attack (\SI{15}{\degree}--\SI{40}{\degree}) for NACA~0015 and lower angles (\SI{3}{\degree}--\SI{15}{\degree}) for AG25 reflect their respective operational flight regimes.}
+\caption{Lift-to-drag ratio comparison highlighting the aerodynamic efficiency of both airfoils. Experimental data (green markers) shows lower L/D ratios than XFLR5 wing-only predictions due to additional system drag sources (fuselage, propellers, landing gear) not included in the wing simulation. The XFLR5 curves represent wing performance only. At $Re=1\times10^5$, the AG25 wing achieves a remarkable maximum L/D of 53.0 at $\alpha \approx \SI{5}{\degree}$, with L/D ratios exceeding 50 between \SI{4}{\degree} and \SI{6}{\degree}—substantially higher than the NACA~0015 wing's maximum L/D of 37.1 at \SI{6}{\degree}. The experimental measurements at higher angles of attack (\SI{15}{\degree}--\SI{40}{\degree}) reflect the quadrotor flight regime where aerodynamic efficiency is secondary to hover capability.}
 \label{fig:ld_comparison}
 \end{figure}
 

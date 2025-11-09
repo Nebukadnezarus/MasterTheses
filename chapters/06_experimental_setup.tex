@@ -92,19 +92,11 @@ Full characterization methodology and results are presented in Section~\ref{sec:
 \label{fig:force_test_stand}
 \end{figure}
 
-\section{Avionics and Communication}\label{sec:avionics}
-
-All control logic ran on the Jetson companion computer under ROS~1 (Noetic).
-The geometric + INDI stack executed at 300\,Hz inner-loop and 300\,Hz outer-loop frequencies.
-Data streams between Jetson and Kakute used MAVLink over UART.
-
-The flight controller relayed IMU data (8\,kHz) and per-motor RPM to the Jetson.
-
 \section{Measurement and Logging}\label{sec:measurement}
 
 Ground-truth position and attitude were provided by Vicon motion-capture systems operating at 200\,Hz.
 For agility trials, the $7 \times 8$\,m Munich arena was used; for efficiency and high-speed tests, the $60 \times 45$\,m AIDA Hall at Reutlingen University (Figure~\ref{fig:aida_hall}).
-Both datasets were timestamp-synchronized with onboard telemetry via NTP and merged in rosbag format.
+Both datasets were timestamp-synchronized with onboard telemetry and merged in rosbag format.
 
 Logged variables included:
 \begin{itemize}
@@ -127,13 +119,12 @@ These channels provided all necessary signals for thrust estimation, trajectory-
 
 Each flight consisted of an autonomous take-off, hover stabilization, and a pre-programmed trajectory (step or circular).
 Manual override from the ground station was available for safety.
-All maneuvers were repeated until consistent trajectories and no external airflow disturbances were observed.
 Each dataset was verified for timing consistency and outliers before analysis.
 
 \section{Data Quality and Uncertainty}\label{sec:data-quality}
 
-Sensor noise levels were assessed via static logs: IMU acceleration noise $\approx 0.03$\,m\,s$^{-2}$ rms; Vicon position uncertainty $\pm 2$\,mm; timestamp jitter $< 5$\,ms.
-No measurable bias drift affected the evaluation interval ($\leq 5$\,min per flight).
+Sensor noise levels were assessed via static logs: IMU acceleration noise $\approx 0.004$\,m\,s$^{-2}$ rms; Vicon position uncertainty $\pm 0.1$\,mm; timestamp jitter $< 20$\,ms.
+No measurable bias drift affected the evaluation interval ($\leq 1$\,min per flight).
 These figures ensure that the reported tracking errors in Chapter~\ref{chapter:experiments-evaluation} exceed measurement noise by at least one order of magnitude.
 
 \section{Outdoor Power Measurement Setup}\label{sec:outdoor-power-setup}
@@ -142,7 +133,7 @@ Electrical power was measured in outdoor flight using the flight controller's on
 
 Data were post-processed to compute instantaneous electrical power $P = VI$ at each sample, where $V$ is the battery voltage in volts and $I$ is the total current draw in amperes. To reduce high-frequency measurement noise while preserving transient behavior, the power signal was smoothed using a 1000-sample moving-average filter, corresponding to approximately \SI{1}{\second} averaging window at the \SI{1}{\kilo\hertz} logging rate.
 
-This configuration enables direct measurement of total system electrical power consumption, including motors, flight controller, companion computer, and all onboard electronics. Combined with synchronized motor RPM telemetry and GPS-based velocity measurements, these data allow quantitative comparison of power demand across different flight regimes (hover, cruise, acceleration) and direct validation of momentum theory predictions for rotor power scaling.
+This configuration enables direct measurement of total system electrical power consumption, including motors, flight controller, and all onboard electronics. Combined with synchronized motor RPM telemetry and GPS-based velocity measurements, these data allow quantitative comparison of power demand across different flight regimes (hover, cruise, acceleration) and direct validation of momentum theory predictions for rotor power scaling.
 
 \section{Summary}\label{sec:exp-setup-summary}
 
