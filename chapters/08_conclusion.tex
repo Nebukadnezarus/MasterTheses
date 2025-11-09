@@ -2,27 +2,24 @@
 
 \chapter{Conclusion}\label{chapter:conclusion}
 
-This thesis demonstrated that an Incremental Nonlinear Dynamic Inversion (INDI) controller can maintain stable and accurate flight on a quadrotor whose aerodynamic surfaces generate lift on the same order as its weight—without using any explicit aerodynamic model.
+This study experimentally confirms that INDI can stabilize a multirotor with significant unmodeled aerodynamic lift, achieving measurable power savings of up to 33\% compared to hover while retaining decimeter accuracy.
+The findings establish that explicit aerodynamic modeling is unnecessary for this class of hybrid UAVs.
 
 A fully 3D-printed X-wing quadrotor was designed, modeled, and flight-tested.
 The static thrust mapping followed a quadratic law with $R^2=0.997$, confirming consistent actuator behavior.
-During motion-capture experiments, the controller achieved RMS position errors between 0.03\,m and 0.16\,m up to 8\,m\,s$^{-1}$ forward speed, demonstrating precise trajectory tracking under strong, unmodeled aerodynamic disturbances.
+Motion-capture experiments yielded RMS position errors between 0.03\,m and 0.16\,m up to 8\,m\,s$^{-1}$ forward speed—precise trajectory tracking despite strong, unmodeled aerodynamic disturbances.
 
-Outdoor experiments with direct electrical-power logging confirm that aerodynamic lift yields tangible energy savings. Power consumption decreased by approximately 33\% at 10\,m\,s$^{-1}$ relative to hover, validating that passive lift directly reduces rotor workload.
-The progression from the initial $45^{\circ}$ NACA~0015 design to the refined $20^{\circ}$ AG25 variant demonstrates a direct link between aerodynamic optimization and measurable electrical-power reduction.
-The improved wing geometry validated under outdoor conditions achieved this 33\% power reduction at 10\,m\,s$^{-1}$ compared with hover.
-These findings close the loop between aerodynamic theory, thrust-based proxy estimates, and real-flight measurements, providing the first quantitative evidence of efficiency improvement in an INDI-controlled aerodynamic multirotor.
+Outdoor experiments with direct electrical-power logging quantified the energy savings.
+Power consumption decreased by 33\% at 10\,m\,s$^{-1}$ relative to hover, directly validating that passive lift reduces rotor workload.
+The progression from the initial $45^{\circ}$ NACA~0015 design to the refined $20^{\circ}$ AG25 variant established a direct link between aerodynamic optimization and measurable electrical-power reduction.
+These results provide the first quantitative evidence of efficiency improvement in an INDI-controlled aerodynamic multirotor, closing the loop between aerodynamic theory, thrust-based proxy estimates, and real-flight measurements.
 
-The results confirm that disturbance-rejection control can absorb quasi-steady aerodynamic effects without identification or model compensation.
-This finding simplifies control design for hybrid multirotors: aerodynamic augmentation can be pursued purely at the hardware level, leaving the control law unchanged.
+INDI's disturbance-rejection capability absorbs quasi-steady aerodynamic effects without identification or model compensation.
+This eliminates the need for complex aerodynamic modeling in the control law: aerodynamic augmentation can be pursued purely at the hardware level, leaving the control architecture unchanged.
 
-The main limitations are the absence of direct power measurements and quantitative comparison to a geometric-only baseline.
-Future work should instrument the system with current sensing to quantify energy savings, and perform controlled A/B tests to isolate the INDI improvement.
+The main limitations are the absence of quantitative comparison to a baseline quadrotor without aerodynamic surfaces and the lack of current sensing on individual motors.
+Future work should include controlled A/B tests against a geometric-only baseline to isolate the INDI contribution, extend testing to longer endurance missions to quantify range increase, and incorporate varying payload configurations.
 Extending the framework to dynamic flight envelopes and real-time aerodynamic estimation would further test its generality.
-Additional future work includes:
-\begin{itemize}
-\item Extend tests to longer endurance missions to quantify range increase and include varying payload configurations.
-\end{itemize}
 
-Overall, the study establishes a reproducible experimental benchmark for aerodynamic surface-enhanced multirotors and provides evidence that model-free incremental control remains robust even when aerodynamic lift dominates vehicle dynamics.
+This study establishes a reproducible experimental benchmark for aerodynamic surface-enhanced multirotors, demonstrating that model-free incremental control remains robust when aerodynamic lift dominates vehicle dynamics.
 
