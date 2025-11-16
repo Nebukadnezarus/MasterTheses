@@ -7,14 +7,22 @@ Conventional multirotors achieve unmatched agility and control simplicity but re
 
 This thesis investigates a minimal hybrid concept: a quadrotor augmented with fixed aerodynamic surfaces. The objective is to examine whether such a configuration can achieve measurable lift-induced power relief while retaining the full controllability of a multirotor and without increasing mechanical complexity.
 
+While several studies have demonstrated that fixed aerodynamic surfaces can reduce power consumption in forward flight, none have examined how such unmodeled aerodynamic forces affect trajectory-tracking accuracy or control robustness when using a disturbance-rejection controller such as Incremental Nonlinear Dynamic Inversion (INDI). This gap is central: aerodynamic lift may improve efficiency but also introduces nonlinear couplings that could degrade control performance. The present work investigates this interaction directly.
+
+Improving forward-flight efficiency is meaningful only if control performance is preserved. Aerodynamic surfaces alter force and moment coupling, which may burden or destabilize a conventional multirotor controller. Thus, efficiency and control robustness must be evaluated together.
+
+INDI is chosen because its incremental formulation rejects slowly varying disturbances without requiring an aerodynamic model. Aerodynamic lift from fixed wings constitutes precisely such a disturbance. This thesis therefore tests the hypothesis that INDI maintains tracking accuracy under significant, unmodeled aerodynamic lift, eliminating the need for model-based compensation.
+
 \section{Research question}
 The central research question is:
 
 \begin{quote}
-\textit{Can an Incremental Nonlinear Dynamic Inversion (INDI) controller maintain accurate trajectory tracking and flight stability on a quadrotor with significant aerodynamic lift, without relying on an explicit aerodynamic model, and can the resulting aerodynamic lift yield measurable electrical-power savings in forward flight?}
+\textit{Can an unmodified INDI controller maintain accurate trajectory tracking on a quadrotor with significant aerodynamic lift, and does the resulting rotor unloading translate into measurable electrical power savings?}
 \end{quote}
 
-To answer this, the work combines modeling, design, and experimental validation. A six-degree-of-freedom dynamics model with simplified aerodynamic terms is derived. A fully 3D-printed ``X-wing'' quadrotor platform is built to match this model. The controller architecture employs a cascaded INDI structure with a geometric-based outer loop for position control and an inner INDI loop for attitude control, implemented in ROS~1 and validated through motion-capture experiments, as well as outdoor flights with synchronized power logging.
+To answer this, the work combines modeling, design, and experimental validation. A six-degree-of-freedom dynamics model with simplified aerodynamic terms is derived. A fully 3D-printed ``X-wing'' quadrotor platform is built to match this model. The controller architecture employs a cascaded INDI structure with a linear outer loop for position control and a geometric-based inner INDI loop for attitude control, implemented in C++ using ROS~1 and validated through motion-capture experiments, as well as outdoor flights with synchronized power logging.
+
+The scope of this work is intentionally limited: no aerodynamic model is used in the controller, and no transition or hybrid flight regime is considered. Instead, the study isolates the interaction between fixed-wing lift and an unmodified INDI controller in forward flight, without introducing gain scheduling or aerodynamic compensation.
 
 \section{Contributions}
 The contributions of this thesis are:
@@ -24,9 +32,9 @@ The contributions of this thesis are:
   
   \item \textbf{Dynamics model}: A minimal 6-DoF model including quadratic lift and drag suitable for control and simulation.
   
-  \item \textbf{Control architecture}: A cascaded INDI structure with a geometric-based outer loop for position control and an inner INDI loop for attitude control that compensates aerodynamic disturbances without explicit modeling.
+  \item \textbf{Control architecture}: A cascaded INDI structure with a linear outer loop for position control and a geometric-based inner INDI loop for attitude control that compensates aerodynamic disturbances without explicit modeling.
   
-  \item \textbf{Experimental validation}: Static thrust mapping with $R^2 = 0.997$ and indoor motion-capture trials and outdoor flights with synchronized power logging.
+  \item \textbf{Experimental validation}: System identification, model validation, and indoor motion-capture trials as well as outdoor flights with synchronized power logging.
   
   \item \textbf{Efficiency assessment}: Measured rotor-power reduction up to 33\% at 10\si{\meter\per\second} compared with hover, confirming that passive lift directly reduces electrical power consumption.
 \end{itemize}
@@ -36,4 +44,4 @@ These measurements provide the first quantitative demonstration of real-flight p
 This investigation provides a reproducible reference for future research on aerodynamic surface-enhanced multirotors and hybrid UAV control without reliance on aerodynamic parameter identification.
 
 \section{Thesis organization}
-Chapter~\ref{chapter:related-work} reviews related work and motivates the chosen design. Chapter~\ref{chapter:dynamics-model} derives the model. Chapter~\ref{chapter:platform-design} details the platform. Chapter~\ref{chapter:control-architecture} presents the controller. Chapters~\ref{chapter:experimental-setup} and~\ref{chapter:experiments-evaluation} describe the setup and experiments. Chapter~\ref{chapter:conclusion} concludes.
+The following chapter surveys prior work in quadrotor control, hybrid VTOL architectures, and aerodynamic augmentation, highlighting the absence of systematic evaluation of control robustness under passive aerodynamic lift. Chapter~\ref{chapter:related-work} reviews related work and motivates the chosen design. Chapter~\ref{chapter:dynamics-model} derives the model. Chapter~\ref{chapter:platform-design} details the platform. Chapter~\ref{chapter:control-architecture} presents the controller. Chapters~\ref{chapter:experimental-setup} and~\ref{chapter:experiments-evaluation} describe the setup and experiments. Chapter~\ref{chapter:conclusion} concludes.

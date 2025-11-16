@@ -2,14 +2,7 @@
 
 \chapter{Dynamics Model}\label{chapter:dynamics-model}
 
-The following model provides a formal reference for all forces and moments acting on the vehicle but is not employed directly by the controller. The purpose is two-fold:
-
-\begin{enumerate}
-  \item To define the dynamic relationships and notation used in subsequent analysis and simulation.
-  \item To quantify the order of magnitude of aerodynamic forces that the INDI controller must reject without an explicit model.
-\end{enumerate}
-
-The controller described in Chapter~\ref{chapter:control-architecture} relies solely on incremental acceleration feedback; none of the aerodynamic coefficients or equations derived here are required in real time.
+This chapter formulates the six-degree-of-freedom dynamics used throughout the thesis. The model serves two purposes: (i) to quantify the aerodynamic forces and moments that act as disturbances on the multirotor, and (ii) to establish the reference against which the INDI controller must reject these disturbances. As discussed in Chapter~\ref{chapter:related-work}, INDI-based controllers have demonstrated strong robustness to aerodynamic loading in both classical quadrotors and tailsitter pre-transition regimes, enabling the present work to use a simplified aerodynamic description without compromising control fidelity. The aerodynamic terms introduced here are used only for offline analysis; the controller in Chapter~\ref{chapter:control-architecture} deliberately ignores them.
 
 \section{List of Symbols}
 \begin{longtable}{p{0.15\textwidth}p{0.6\textwidth}p{0.15\textwidth}}
@@ -103,12 +96,11 @@ Let $\mathbf{v}_w\in\mathbb{R}^3$ be the wind in $\mathcal{W}$. Body-frame airsp
 \mathbf{v}_a \;=\; R^\top(\mathbf{v}-\mathbf{v}_w) \;\in\; \mathbb{R}^3, \quad
 V \;=\;\|\mathbf{v}_a\|.
 \]
-Define angle of attack and sideslip (aircraft convention, small angles):
+Angle of attack and sideslip:
 \[
-\alpha \;=\; \operatorname{atan2}\!\big(-v_{a,z},\, v_{a,x}\big),\qquad
-\beta  \;=\; \arcsin\!\Big(\frac{v_{a,y}}{V}\Big),
+\alpha = \arctan2(-v_{a,z}, v_{a,x}), \qquad
+\beta = \arcsin\left(\frac{v_{a,y}}{V}\right).
 \]
-so that $\alpha\!\approx\!-v_{a,z}/v_{a,x}$ and $\beta\!\approx\!v_{a,y}/V$ for $|v_{a,z}|\!\ll\!|v_{a,x}|$, $|v_{a,y}|\!\ll\!V$.
 
 \section{Forces in the World Frame}
 Total force:
@@ -127,47 +119,10 @@ Each rotor $i$ produces a thrust $f_i$ along its (possibly tilted) direction $\h
 For small fixed tilts (e.g., $\pm 5^\circ$) we also provide the common approximation $\mathbf{F}_T \approx (\sum_i f_i)\,R\mathbf{e}_3$; all tilt effects are embedded in the allocation matrix $G$ used for moments.
 
 \subsection{Aerodynamic Forces on Fixed Surfaces}
-We use a lumped, quasi-steady wing model. Dynamic pressure $q=\tfrac{1}{2}\rho V^2$, total reference area $S$.
-
-Lift/drag coefficients:
-\[
-C_L(\alpha)=a_\alpha\,\alpha,\qquad
-C_D(\alpha)=C_{D0}+k\,C_L(\alpha)^2.
-\]
-
-The lift coefficient $C_L$ is modeled as a linear function of the angle of attack~$\alpha$:
-\begin{equation}
-C_L(\alpha) = a_\alpha \, \alpha,
-\label{eq:lift-curve}
-\end{equation}
-where $a_\alpha$ [rad$^{-1}$] is the lift-curve slope.
-$C_L$ represents the dimensionless ratio of lift force to dynamic pressure and reference area,
-\(
-C_L = \frac{L}{\tfrac{1}{2}\rho V^2 S}.
-\)
-The angle of attack $\alpha$ is defined as the angle between the incoming airflow and the vehicle body $x$-axis (or the mean aerodynamic chord of the wing).
-For thin airfoils and small angles, $a_\alpha$ can be approximated by $2\pi$~rad$^{-1}$ in 2D, or by the finite-wing correction
-\(
-a_\alpha = \frac{2\pi AR}{AR + 2}
-\)
-with aspect ratio $AR = b^2/S$.
-We measure $\alpha$ relative to the body $x$-axis (mean aerodynamic chord aligned with $\mathbf{e}_x$); the linear model holds for attached flow ($|\alpha|\lesssim 10^\circ$).
-This linear relation is valid up to moderate angles
-and forms the basis for the simplified quadratic aerodynamic model used here.
-
-\paragraph{Side-force convention.}
-We use $C_Y(\beta)=C_{Y_\beta}\,\beta$ with $C_{Y_\beta}$ [rad$^{-1}$] the stability derivative.
-For conventional weathercock-stable configurations $C_{Y_\beta}<0$ (side-force opposes $\beta$).
-In our small UAV geometry $C_{Y_\beta}$ is identified experimentally and may be small in magnitude.
-
-Optional lateral (side-force) coefficient:
-\[
-C_Y(\beta)=a_\beta\,\beta.
-\]
-
-\paragraph{Aerodynamic axes.}
 We assume the wing span aligns with $\mathbf{e}_y$, so lift lies in the $(x,z)$ plane.
 The definitions of $\hat{\mathbf{z}}_L$ and $\hat{\mathbf{y}}_S$ are undefined when $\hat{\mathbf{v}}$ is parallel to the respective cross-product axis (e.g., $\hat{\mathbf{v}}\parallel\mathbf{e}_y$ or $\hat{\mathbf{v}}\parallel\mathbf{e}_z$); in implementation we fall back to the last valid direction or a small-angle approximation.
+
+Dynamic pressure $q=\tfrac{1}{2}\rho V^2$, total reference area $S$.
 
 Unit aerodynamic directions in $\mathcal{B}$ (from $\mathbf{v}_a$):
 \[
@@ -271,7 +226,6 @@ The cubic law provides a theoretical baseline later compared against measured el
   \item No explicit prop-wash/wing interference; its net effect is absorbed in the disturbance terms and identified coefficients.
   \item Rigid airframe, symmetric mass properties about $\mathcal{B}$ axes.
   \item Fixed-pitch rotors; flapping and gyroscopic coupling are neglected in the baseline model.
-  \item Coefficient models $C_L=a_\alpha\alpha$, $C_Y=a_\beta\beta$, $C_D=C_{D0}+k C_L^2$ valid for the moderate $\alpha,\beta$ range used here.
 \end{itemize}
 
 \section{Summary and Outlook}

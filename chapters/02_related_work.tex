@@ -2,28 +2,66 @@
 
 \chapter{Related Work}\label{chapter:related-work}
 
-The challenge of combining high agility with aerodynamic efficiency defines a long-standing trade-off in UAV design. Pure multirotors provide full six-degree-of-freedom control and extreme maneuverability but waste energy by tilting thrust for lift during forward flight. Fixed-wing UAVs achieve order-of-magnitude better cruise efficiency through aerodynamic lift but lose the ability to hover or hold arbitrary attitudes. Hybrid VTOL platforms attempt to bridge these regimes at the cost of additional actuators, transition logic, and increased control complexity.
+This chapter reviews existing literature in three areas relevant to multirotors equipped with fixed aerodynamic surfaces: (i) quadrotor control approaches and their disturbance-rejection properties, (ii) control strategies for hybrid VTOL and fixed-wing/transitioning platforms, and (iii) prior work on aerodynamic augmentation of multirotors. Together, these strands expose the gap addressed in this thesis: the absence of a systematic evaluation of a disturbance-rejection controller such as INDI on a multirotor that generates substantial aerodynamic lift.
 
-\section{Control versus Efficiency Trade-off}
+\section{Quadrotor Control Approaches}
 
-Multirotor control has matured through geometric and Incremental Nonlinear Dynamic Inversion (INDI) frameworks that achieve aggressive trajectory tracking without detailed modeling~\cite{Sieberling2010,Goodarzi2015,Tzoumanikas2021}. These architectures rely solely on measured accelerations and remain robust under aerodynamic disturbances. However, they operate under the implicit assumption that thrust is the sole lift source---an assumption that breaks once fixed lifting surfaces contribute significant forces. The question is therefore whether these established control laws remain valid when lift is partly aerodynamic and unmodeled.
+Modern multirotor control is dominated by geometric controllers and incremental nonlinear dynamic inversion (INDI).
 
-\section{Existing Approaches and Their Limits}
+\paragraph{Geometric control on SE(3).}
+Geometric controllers operate directly on the configuration space of the quadrotor, avoiding attitude singularities and ensuring well-defined error metrics on SO(3)~\cite{Lee2010,Goodarzi2015}. These approaches provide precise tracking of aggressive trajectories and are now standard in many high-performance flight stacks. Their performance, however, depends on reasonably accurate modeling of rotational dynamics and control effectiveness.
 
-Hybrid VTOL concepts such as tilt-rotor and tailsitter aircraft achieve efficient cruise flight and transitions~\cite{Tal2022Global,DaudFilho2024}, yet their complexity is high. They require coordinated mode switching, non-linear actuator coupling, and precise aerodynamic modeling---elements that obscure the fundamental control question: can a standard multirotor controller tolerate significant aerodynamic forces without explicit modeling?
+\paragraph{Incremental Nonlinear Dynamic Inversion (INDI).}
+INDI provides robustness to model errors by controlling incremental changes in angular acceleration rather than relying on a full dynamic model~\cite{Sieberling2010,Smeur2016}. The method uses measured angular rates, finite-difference angular accelerations, and motor-speed feedback to estimate control effectiveness, exploiting the time-scale separation between fast actuators and slower vehicle dynamics. Quasi-steady aerodynamic forces---such as rotor drag, prop-wake asymmetries, and external disturbances---appear only as slowly varying terms and are rejected through the incremental structure. INDI has demonstrated strong disturbance rejection in aggressive flight~\cite{Tzoumanikas2021} and under significant aerodynamic loading without explicit aerodynamic identification.
 
-\section{Aerodynamic Augmentation Without Added Complexity}
+\paragraph{Summary.}
+The quadrotor literature establishes that INDI can tolerate substantial unmodeled aerodynamic forces, provided actuator dynamics are fast and control effectiveness is known. This makes INDI a promising candidate for platforms with additional passive aerodynamic surfaces---but this has not been systematically evaluated.
 
-Prior studies have explored fixed aerodynamic surfaces on multirotors as a simpler alternative. Dawkins and DeVries~\cite{Dawkins2018} demonstrated $\approx 35\,\%$ lower cruise power at 3--5\,\si{\meter\per\second} with small attached wings, while Xiao et al.~\cite{Xiao2020} reported roughly $50\,\%$ electrical-power reduction at 15\,\si{\meter\per\second} on a 1.2\,kg platform, both without altering the baseline controller. These results suggest that passive aerodynamic surfaces can meaningfully reduce power consumption while maintaining full control authority. However, none of these works analyzed how unmodeled aerodynamic forces affect control stability or trajectory-tracking accuracy---especially under a disturbance-rejection scheme such as INDI.
+\section{Hybrid VTOL and Fixed-Wing/Transition Control}
 
-\section{Research Rationale}
+Hybrid VTOL platforms combine multirotor hovering with fixed-wing cruise capability. They fall into two major categories:
 
-The literature therefore leaves an open gap: no prior study has systematically tested whether a disturbance-rejection controller such as INDI can maintain precision flight on a multirotor with strong, yet unmodeled, aerodynamic lift. Addressing this gap requires a configuration that introduces aerodynamic coupling without adding mechanical or algorithmic complexity. A quadrotor with fixed wings---an aerodynamic surface-enhanced multirotor---satisfies that criterion.
+\paragraph{Tilt-rotor and tilt-wing aircraft.}
+Tilt-rotor concepts reorient propulsion units mechanically~\cite{Hartmann2017,Bauersfeld2021}. Control design requires accurate aerodynamic models, explicit transition logic, and coordinated actuator scheduling. Mode switches between hover and forward flight introduce nonlinear couplings that must be explicitly handled.
 
-Consequently, this thesis focuses on (i) implementing an INDI-based controller on such a platform, (ii) quantifying its tracking accuracy under aerodynamic loading, and (iii) evaluating whether explicit aerodynamic modeling is unnecessary within the tested speed envelope.
+\paragraph{Tailsitters and transition-capable platforms.}
+Tailsitters retain fixed actuators but operate over radically different aerodynamic regimes~\cite{Oosedo2017,Tal2022Global}. Control architectures typically blend multirotor and fixed-wing control laws, with transition management depending on angle-of-attack estimation and aerodynamic model interpolation~\cite{DaudFilho2024}. Gains must adapt to the current flight regime to ensure stability during transition.
 
-\section{Summary and Transition}
+\paragraph{Summary.}
+All hybrid VTOL concepts share two traits:
+(1) they require explicit aerodynamic modeling, and
+(2) they require mode-dependent control architectures (gain scheduling, blending, or transition logic).
+This complexity stands in contrast to the simplicity of a pure multirotor controller, raising the question whether a simpler design---adding fixed wings without changing the control structure---can achieve useful efficiency benefits.
 
-Existing research establishes the energy-efficiency benefits of fixed aerodynamic surfaces on multicopters but leaves their influence on control robustness largely unexplored. The missing link is a quantitative examination of how a conventional multirotor controller---specifically, an INDI-based architecture---behaves when aerodynamic lift and drag become significant yet remain unmodeled.
+\section{Aerodynamically Augmented Multirotors}
 
-To address this, the present work isolates the essential physics by selecting the simplest possible testbed: a standard quadrotor geometry augmented with symmetric fixed wings. The next chapter formalizes its six-degree-of-freedom dynamics and defines the aerodynamic forces that the controller will deliberately ignore. This provides the analytical baseline against which the later experimental results can be interpreted.
+Between pure multirotors and full VTOL systems lies a class of platforms that integrate fixed passive aerodynamic surfaces while retaining standard quadrotor actuation.
+
+\paragraph{Small-wing augmentation studies.}
+Dawkins and DeVries~\cite{Dawkins2018} demonstrated $\approx 35\,\%$ power reduction at 3--5\,\si{\meter\per\second} using small wings on a quadrotor, with the native PID controller unchanged.
+Xiao et al.~\cite{Xiao2020} achieved $\approx 50\,\%$ electrical power reduction at 15\,\si{\meter\per\second} on a 1.2\,kg platform, also without modifying the baseline controller.
+
+These studies show that fixed wings can significantly reduce propulsive power.
+However, both works evaluate only power consumption, not control performance. They provide no analysis of:
+\begin{itemize}
+\item trajectory tracking accuracy,
+\item disturbance rejection,
+\item coupling effects between aerodynamics and attitude dynamics,
+\item controller robustness limits.
+\end{itemize}
+
+\paragraph{Partial-transition tailsitter studies.}
+Beyond small-wing augmentation, tailsitter platforms provide the closest analogue to the concept investigated in this thesis. In tailsitter flight prior to transition, the vehicle experiences significant aerodynamic lift and drag while still relying on multirotor-style attitude control laws. Several studies~\cite{Zhou2017,Oosedo2017,Tal2022Global,DaudFilho2024} show that conventional or slightly adapted multirotor controllers can stabilise such vehicles in regimes where aerodynamic forces dominate thrust-generated forces, without requiring an explicit aerodynamic model. These works demonstrate that robust attitude controllers---especially those leveraging incremental or disturbance-rejection principles---can tolerate substantial, unmodeled aerodynamic coupling during partial-transition flight. Although tailsitters differ mechanically from the fixed-wing quadrotor considered here, they provide empirical evidence that multirotor control architectures remain viable under strong aerodynamic loading. This insight directly motivates the present investigation: if multirotor-style control can handle the aerodynamic complexity of tailsitter pre-transition flight, a disturbance-rejecting controller such as INDI may likewise maintain tracking performance on a quadrotor equipped with fixed wings.
+
+\paragraph{Summary.}
+The literature demonstrates that (i) fixed wings provide measurable efficiency gains, and (ii) multirotor controllers can survive some aerodynamic influence. But no prior work quantifies how aerodynamic lift and drag affect tracking accuracy when a disturbance-rejection controller such as INDI is used without modification.
+
+\section{Gap and Scope}
+
+Across quadrotor control, VTOL architecture, and aerodynamic augmentation studies, the missing link is clear:
+
+\textit{No existing work systematically examines the control performance---especially tracking accuracy and disturbance rejection---of an unmodified INDI controller on a multirotor that generates significant aerodynamic lift.}
+
+Prior works prove energy savings, but none analyze how unmodeled quasi-steady aerodynamic forces interact with the control structure.
+
+This thesis addresses that gap by experimentally evaluating an INDI-controlled quadrotor equipped with fixed wings across a range of forward-flight speeds, quantifying both aerodynamic effects and control performance.
