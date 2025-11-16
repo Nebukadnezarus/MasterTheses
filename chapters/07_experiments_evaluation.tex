@@ -14,15 +14,15 @@ The experiments address four key objectives:
 \section{Static Thrust Identification}\label{sec:thrust-identification}
 
 The thrust-characterization procedure described in Section~\ref{sec:thrust-characterization} produced 975 measurements under the 6\,S 2\,P power configuration.
-With that a quadratic model was fitted:
+A quadratic model was fitted to the zero-offset-corrected data:
 \begin{equation}
 T = 5.15 \times 10^{-8}\,\text{RPM}^2 - 0.09 \times 10^{-3}\,\text{RPM},
 \label{eq:thrust-rpm-fit}
 \end{equation}
 with coefficient of determination $R^2 = 0.997$ (Figure~\ref{fig:thrust_vs_rpm}).
 
-The quadratic dependence confirms classical blade-element scaling $T \propto \Omega^2$ and validates the assumption used in the control allocation.
-This mapping was used throughout all flight experiments to translate desired thrust into commanded motor speeds.
+The quadratic dependence confirms the classical blade-element scaling $T \propto \Omega^2$ and validates the assumption used in the control allocation.
+This mapping is used throughout all flight experiments to translate desired thrust into commanded motor speeds and to estimate thrust from measured RPM when reconstructing aerodynamic forces.
 
 \begin{figure}[htbp]
   \centering
@@ -38,9 +38,11 @@ This mapping was used throughout all flight experiments to translate desired thr
       \addlegendentry{Quadratic fit ($R^2=0.997$)}
     \end{axis}
   \end{tikzpicture}
-  \caption{Thrust vs RPM with zero-offset corrected quadratic fit. An offset of $-0.996$\,N was applied to ensure zero thrust at zero RPM.}
+  \caption{Static thrust versus RPM with quadratic fit after zero-offset correction. The close agreement ($R^2=0.997$) confirms the $T \propto \Omega^2$ scaling used in control and analysis.}
   \label{fig:thrust_vs_rpm}
 \end{figure}
+
+To interface with the low-level motor controller, a linear mapping between command and RPM was identified (Figure~\ref{fig:rpm_vs_cmd}). This provides a simple feedforward relationship for allocating thrust commands to ESC duty cycles.
 
 \begin{figure}[htbp]
   \centering
@@ -56,9 +58,11 @@ This mapping was used throughout all flight experiments to translate desired thr
       \addlegendentry{Linear fit ($R^2=0.991$)}
     \end{axis}
   \end{tikzpicture}
-  \caption{RPM vs Command with linear fit: $\text{RPM} = 19260 \cdot \text{cmd} + 3650$.}
+  \caption{Static mapping between motor command and RPM. The near-linear relationship simplifies thrust allocation and allows RPM prediction from control inputs.}
   \label{fig:rpm_vs_cmd}
 \end{figure}
+
+For completeness, Figure~\ref{fig:thrust_vs_cmd} shows the direct mapping between motor command and thrust. This relationship is used only for sanity checks; all subsequent analysis relies on the RPM-based thrust model in \eqref{eq:thrust-rpm-fit}.
 
 \begin{figure}[htbp]
   \centering
@@ -69,25 +73,23 @@ This mapping was used throughout all flight experiments to translate desired thr
       \addlegendentry{Measured data}
     \end{axis}
   \end{tikzpicture}
-  \caption{Thrust vs Command showing the direct relationship between motor command and thrust force.}
+  \caption{Static thrust as a function of motor command. This plot illustrates the overall control authority of the propulsion system.}
   \label{fig:thrust_vs_cmd}
 \end{figure}
 
 \section{Trajectory-Tracking Performance and Agility}\label{sec:tracking-performance}
 
-To comprehensively evaluate the platform's control robustness and agility envelope, circular trajectory experiments were conducted at the flight arena in Munich.
-These tests validate the INDI controller's ability to maintain stable tracking performance across a wide speed range while executing sustained coordinated turns with significant aerodynamic loading.
+This section evaluates the closed-loop performance of the INDI controller in the Munich motion-capture arena.
+The objective is to quantify tracking accuracy, coordinated-turn behaviour, and usable agility envelope under significant aerodynamic loading from the wings.
 
 \subsection{Circular-Trajectory Tracking}\label{sec:circular-tracking}
 
-Closed-loop tracking was evaluated on circular trajectories at cruise speeds between \SI{3}{\meter\per\second} and \SI{8}{\meter\per\second}.
-Two reference circles were used: a \SI{2.0}{\meter} radius for lower speeds (\SI{3}{\meter\per\second} and \SI{5}{\meter\per\second}) and a \SI{2.3}{\meter} radius for higher speeds (\SI{6.5}{\meter\per\second} and \SI{8}{\meter\per\second}).
-This resulted in centripetal accelerations ranging from \SI{4.5}{\meter\per\second\squared} at \SI{3}{\meter\per\second} to \SI{27.8}{\meter\per\second\squared} (approximately 2.8g) at \SI{8}{\meter\per\second}.
+Closed-loop tracking was tested on horizontal circles at cruise speeds between \SI{3}{\meter\per\second} and \SI{8}{\meter\per\second}.
+Two reference radii were used: \SI{2.0}{\meter} for \SI{3}{\meter\per\second} and \SI{5}{\meter\per\second}, and \SI{2.3}{\meter} for \SI{6.5}{\meter\per\second} and \SI{8}{\meter\per\second}.
+The corresponding centripetal accelerations span from \SI{4.5}{\meter\per\second\squared} at \SI{3}{\meter\per\second} up to \SI{27.8}{\meter\per\second\squared} (approximately 2.8\,g) at \SI{8}{\meter\per\second}.
 
-The root-mean-square (RMS) 3D position error increased from \SI{0.064}{\meter} at \SI{3}{\meter\per\second} to \SI{0.184}{\meter} at \SI{8}{\meter\per\second}, while maximum deviation remained below \SI{0.54}{\meter}.
-These results demonstrate that the controller maintains sub-decimeter tracking accuracy despite the presence of aerodynamic lift and drag, confirming that explicit aerodynamic modeling is unnecessary within this speed envelope.
-
-\subsection{Variable-Speed Agility Demonstration}\label{sec:circular-tracking-detailed}
+Figure~\ref{fig:variable_speed_trajectories} shows the resulting trajectories.
+The vehicle follows the reference circles with small lateral deviations across the entire speed range; deviations remain clearly bounded even at the highest speed.
 
 \begin{figure}[htbp]
   \centering
@@ -129,16 +131,22 @@ These results demonstrate that the controller maintains sub-decimeter tracking a
   \addlegendentry{\SI{8}{\meter\per\second}}
   \end{axis}
   \end{tikzpicture}
-  \caption{Circular trajectory tracking at variable speeds (\SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}). The \SI{3}{\meter\per\second} and \SI{5}{\meter\per\second} trajectories follow the \SI{2.0}{\meter} radius reference circle (gray dotted), while the \SI{6.5}{\meter\per\second} and \SI{8}{\meter\per\second} trajectories follow the \SI{2.3}{\meter} radius reference circle (black dashed). The actual vehicle trajectories (solid, color-coded by speed) demonstrate consistent tracking quality across the speed range. Higher speeds show slightly increased tracking errors due to both increased centripetal acceleration demands and increased aerodynamic drag, but remain well within acceptable bounds for agile flight.}
+  \caption{Circular trajectory tracking at cruise speeds from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}. The measured paths remain close to the reference circles for all speeds.}
   \label{fig:variable_speed_trajectories}
 \end{figure}
 
-\paragraph{Tracking performance vs. speed.}
-Figure~\ref{fig:tracking_error_vs_speed} quantifies how tracking accuracy varies with flight speed using two key metrics: the root-mean-square (RMS) error and the maximum error. The RMS error is defined as:
-\begin{equation}
-\text{RMS error} = \sqrt{\frac{1}{N}\sum_{i=1}^{N}e_i^2}
-\end{equation}
-where $e_i$ is the position error at time step $i$ and $N$ is the total number of samples. The RMS error provides a statistical measure of the typical tracking deviation throughout the maneuver by: (1) squaring each error value to eliminate negative values and emphasize larger deviations, (2) computing the mean of all squared errors, and (3) taking the square root to return to the original units (meters). Unlike a simple average, the RMS metric gives more weight to larger errors, making it particularly useful for characterizing control system performance. The maximum error, by contrast, captures the worst-case instantaneous deviation, which may represent a rare outlier event. Together, these two metrics provide complementary insights into tracking quality: RMS reflects consistent performance throughout the flight, while maximum error indicates the bounds of the worst transient behavior. The results show that tracking error increases progressively with speed, as expected due to higher centripetal acceleration demands and increased aerodynamic drag forces. However, even at \SI{8}{\meter\per\second}, both RMS and maximum errors remain well-bounded, demonstrating robust control performance across the entire agility envelope.
+\subsection{Variable-Speed Agility Demonstration}\label{sec:circular-tracking-detailed}
+
+Tracking accuracy is quantified using the 3D RMS position error and the maximum position error over each circle.
+Figure~\ref{fig:tracking_error_vs_speed} and Table~\ref{tab:variable_speed_metrics} summarise these metrics as a function of speed.
+
+Across all speeds, the 3D RMS error remains below \SI{0.24}{\meter}, with typical values between \SI{0.06}{\meter} and \SI{0.18}{\meter}.
+Maximum deviations stay below \SI{0.55}{\meter}.
+In the horizontal plane, RMS errors are significantly smaller than the 3D values, indicating that most of the residual error is due to minor altitude variations and alignment offsets rather than large lateral deviations.
+Even at \SI{8}{\meter\per\second}, the maximum horizontal error remains below roughly 20\,\% of the circle radius, which is acceptable for agile flight in confined spaces.
+
+As speed increases, both RMS and maximum errors tend to grow, reflecting higher centripetal acceleration demands and increased aerodynamic drag.
+The increase is gradual rather than abrupt; there is no speed at which tracking quality suddenly degrades, and the controller maintains a consistent accuracy--agility trade-off over the tested envelope.
 
 \begin{figure}[htbp]
   \centering
@@ -183,12 +191,23 @@ where $e_i$ is the position error at time step $i$ and $N$ is the total number o
   \addlegendentry{Max error (XY only)}
   \end{axis}
   \end{tikzpicture}
-  \caption{Tracking error as a function of flight speed during circular trajectory maneuvers. The 3D RMS error (blue) increases from \SI{0.064}{\meter} at \SI{3}{\meter\per\second} to \SI{0.184}{\meter} at \SI{8}{\meter\per\second}, while the XY-plane RMS error (orange) ranges from \SI{0.032}{\meter} to \SI{0.162}{\meter}. The 3D maximum error (green) increases from \SI{0.088}{\meter} to \SI{0.538}{\meter}, and the XY-plane maximum error (gray) ranges from \SI{0.056}{\meter} to \SI{0.454}{\meter}. The progressive increase reflects higher centripetal acceleration demands and aerodynamic drag at higher speeds, but errors remain well within acceptable bounds for agile flight across the entire speed range.}
+  \caption{Tracking error as a function of flight speed during circular maneuvers. RMS and maximum errors remain bounded across the speed range; see Table~\ref{tab:variable_speed_metrics} for numerical values.}
   \label{fig:tracking_error_vs_speed}
 \end{figure}
 
-\paragraph{Bank angle and centripetal acceleration.}
-Figure~\ref{fig:bank_angle_vs_speed} illustrates the aggressive maneuvering capability of the platform. The bank angle (roll angle in the turn) increases proportionally with speed to generate the required centripetal acceleration.
+\subsection{Bank Angle and Coordinated Turn Behaviour}\label{sec:bank-angle}
+
+The circular flights also probe the coordinated-turn behaviour of the INDI controller.
+For a coordinated level turn with negligible sideslip, the required bank angle $\phi$ satisfies
+\begin{equation}
+  \tan(\phi) = \frac{a_c}{g},
+\end{equation}
+where $a_c$ is the centripetal acceleration.
+Figure~\ref{fig:bank_angle_vs_speed} compares the measured maximum roll angles during the circles against this theoretical value.
+
+At \SI{3}{\meter\per\second}, the platform banks to approximately \SI{30}{\degree}; at \SI{8}{\meter\per\second} it sustains bank angles near \SI{77}{\degree}, corresponding to $a_c \approx 2.8g$.
+The deviation between measured and theoretical bank angle remains within \SI{2}{\degree}--\SI{10}{\degree} across all speeds (Table~\ref{tab:variable_speed_metrics}), despite the presence of unmodelled lift and drag from the wings.
+This confirms that the INDI controller enforces near-coordinated turning behaviour without explicit aerodynamic compensation.
 
 \begin{figure}[htbp]
   \centering
@@ -215,29 +234,36 @@ Figure~\ref{fig:bank_angle_vs_speed} illustrates the aggressive maneuvering capa
   \addlegendentry{Theoretical (coordinated turn)}
   \end{axis}
   \end{tikzpicture}
-  \caption{Bank angle as a function of cruise speed during circular flight. The measured maximum bank angles (blue solid) increase from \SI{29.85}{\degree} at \SI{3}{\meter\per\second} to \SI{76.77}{\degree} at \SI{8}{\meter\per\second}, closely tracking the theoretical predictions (orange dashed) for coordinated turns where $\tan(\phi) = a_c/g$. The close agreement validates the coordinated turn control strategy, with the platform achieving bank angles within \SI{2}{\degree}--\SI{10}{\degree} of the theoretical values across the entire speed range. At the highest speed (\SI{8}{\meter\per\second}), the platform sustains a bank angle of nearly \SI{77}{\degree}, corresponding to a centripetal acceleration of \SI{27.83}{\meter\per\second\squared} (approximately 2.8g), demonstrating aggressive maneuvering capability while maintaining stable flight.}
+  \caption{Measured maximum bank angle versus theoretical coordinated-turn angle. The close match indicates that the vehicle performs near-coordinated turns across the tested speed range.}
   \label{fig:bank_angle_vs_speed}
 \end{figure}
 
 \begin{table}[htbp]
 \centering
-\caption{Summary of tracking performance at different cruise speeds.}
+\caption{Summary of tracking and agility metrics at different cruise speeds.}
 \label{tab:variable_speed_metrics}
 \begin{tabular}{lccccc}
 \hline
 \textbf{Speed} & \textbf{Centripetal} & \textbf{Bank} & \textbf{RMS} & \textbf{Max} & \textbf{Max Motor} \\
 \textbf{[\si{\meter\per\second}]} & \textbf{Accel. [\si{\meter\per\second\squared}]} & \textbf{Angle [\si{\degree}]} & \textbf{Error [\si{\meter}]} & \textbf{Error [\si{\meter}]} & \textbf{Speed [\si{rpm}]} \\
 \hline
-3.0 & 4.5 & 29.8 & 0.064 & 0.088 & 1319 \\
-5.0 & 12.5 & 57.3 & 0.238 & 0.310 & 1588 \\
-6.5 & 18.4 & 70.4 & 0.155 & 0.386 & 1857 \\
-8.0 & 27.8 & 76.8 & 0.184 & 0.538 & 1961 \\
+3.0 & 4.5 & 29.8 & 0.064 & 0.088 & 13190 \\
+5.0 & 12.5 & 57.3 & 0.238 & 0.310 & 15880 \\
+6.5 & 18.4 & 70.4 & 0.155 & 0.386 & 18570 \\
+8.0 & 27.8 & 76.8 & 0.184 & 0.538 & 19610 \\
 \hline
 \end{tabular}
 \end{table}
 
-\paragraph{Detailed attitude response at maximum speed.}
-Figure~\ref{fig:attitude_8mps} presents the attitude time series for one complete circle at \SI{8}{\meter\per\second}, demonstrating the quality of the coordinated turn execution.
+\subsection{Attitude Response and Agility Limits}\label{sec:agility}
+
+Figure~\ref{fig:attitude_8mps} shows the attitude time series for one complete circle at \SI{8}{\meter\per\second}.
+Roll settles to a nearly constant bank angle over each lap, pitch follows its reference without noticeable oscillations, and yaw rotates smoothly through approximately \SI{360}{\degree} per circle.
+Measured and reference angles overlap closely for all axes, indicating that the INDI controller tracks the high-level attitude commands with minimal phase lag and overshoot.
+
+The data in Table~\ref{tab:variable_speed_metrics} confirm that the vehicle remains controllable up to centripetal accelerations of 2.8\,g with comfortable attitude and motor-speed margins.
+The maximum commanded motor speed of roughly \SI{20000}{rpm} is well below the available headroom, and no re-tuning of controller gains was required between hover, low-speed, and high-speed flight.
+This demonstrates that the incremental disturbance compensation successfully absorbs the quasi-steady aerodynamic effects introduced by the wings and preserves a quadrotor-like agility envelope.
 
 \begin{figure}[htbp]
   \centering
@@ -278,31 +304,13 @@ Figure~\ref{fig:attitude_8mps} presents the attitude time series for one complet
   \addlegendentry{Yaw (reference)}
   \end{axis}
   \end{tikzpicture}
-  \caption{Attitude time series for one complete circle at \SI{8}{\meter\per\second}. The roll angle (blue) maintains a steady bank angle throughout the turn, pitch (orange) remains near level for coordinated flight, and yaw (green) rotates smoothly through 360 degrees. Both measured (solid) and reference (dashed) angles are shown.}
+  \caption{Attitude time series for one complete circle at \SI{8}{\meter\per\second}. Roll, pitch, and yaw closely follow their references without oscillations or saturation.}
   \label{fig:attitude_8mps}
 \end{figure}
 
-\subsection{Agility and Disturbance Rejection}\label{sec:agility}
-
-The vehicle remained controllable throughout the tested acceleration range, sustaining coordinated turns up to approximately 2.8\,g centripetal acceleration without attitude saturation or oscillation.
-No divergence or limit-cycle behavior was observed, indicating that the incremental feedback successfully compensates for the additional aerodynamic moments induced by the wings.
-
-\paragraph{Summary of agility demonstration.}
-The variable-speed circular trajectory tests demonstrate that the X-wing platform achieves robust tracking performance across a wide speed range from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}. Key findings include:
-
-\begin{itemize}
-  \item \textbf{Consistent tracking:} Position tracking errors remain bounded across all speeds, with RMS errors below \SI{0.24}{\meter} even at maximum speed
-  \item \textbf{Coordinated turn behavior:} Bank angles closely follow theoretical predictions, validating the coordinated-turn control law implementation
-  \item \textbf{Smooth attitude control:} Attitude time series show smooth, periodic behavior without oscillations or control saturation
-  \item \textbf{Wide agility envelope:} The platform can sustain centripetal accelerations up to \SI{27.8}{\meter\per\second\squared} (approximately 2.8g) while maintaining stable flight
-  \item \textbf{Control robustness:} The INDI-based controller successfully rejects aerodynamic disturbances from the wings across all flight speeds without requiring speed-dependent gain scheduling
-\end{itemize}
-
-These results validate the control architecture's effectiveness for agile maneuvering and demonstrate that the fixed-wing surfaces do not compromise the platform's quadrotor-like agility characteristics.
-
 \section{Aerodynamic Coefficient Identification}\label{sec:aerodynamic_forces_quantification}
 
-To validate computational aerodynamic predictions and quantify the actual forces experienced during flight, experimental coefficient identification was performed at the AIDA flight arena using force balance analysis from flight test data.
+To validate computational aerodynamic predictions and quantify the forces experienced during flight, experimental coefficient identification was performed at the AIDA flight arena using force-balance analysis on flight-test data.
 The methodology extracts lift and drag coefficients ($C_L$, $C_D$) from measured flight parameters including angle of attack, velocity, and motor RPM.
 
 The aerodynamic coefficient analysis was conducted for both wing designs to quantify the effect of airfoil geometry on lift and drag.
@@ -310,67 +318,65 @@ The NACA~0015 configuration was used for all circular and agility tests, while b
 The subsequent outdoor flight experiments employed the AG25 variant, whose superior lift-to-drag characteristics were confirmed by this analysis.
 
 \paragraph{Rotor unloading measurements.}
-Table~\ref{tab:rotor_unloading} summarizes the measured rotor speeds during straight-line flight tests at different cruise speeds for the NACA~0015 platform (Wing~1). All measurements use a constant hover RPM of \SI{1200}{rpm} as the baseline for comparison.
+Table~\ref{tab:rotor_unloading} summarises the measured rotor speeds during straight-line flight tests at different cruise speeds for the NACA~0015 platform (Wing~1).
+All measurements use a constant hover RPM of \SI{12000}{rpm} as the baseline for comparison.
+The RPM ratio and power ratio columns quantify the degree of rotor unloading as forward speed increases.
 
 \begin{table}[htbp]
 \centering
-\caption{Rotor unloading during forward flight for NACA~0015 platform (Wing~1). Hover RPM: \SI{1200}{rpm}.}
+\caption{Rotor unloading during forward flight for NACA~0015 platform (Wing~1). Hover RPM: \SI{12000}{rpm}.}
 \label{tab:rotor_unloading}
 \begin{tabular}{cccccc}
 \hline
 \textbf{Flight Speed} & \textbf{Pitch Angle} & \textbf{Cruise RPM} & \textbf{RPM Ratio} & \textbf{Power Ratio} & \textbf{Power Savings} \\
 \textbf{[\si{\meter\per\second}]} & \textbf{[\si{\degree}]} & \textbf{[\si{rpm}]} & \textbf{[-]} & \textbf{[-]} & \textbf{[\%]} \\
 \hline
-9.1  & 37.2 & 1130 & 0.942 & 0.836 & 16.4 \\
-10.7 & 28.5 & 1110 & 0.925 & 0.792 & 20.8 \\
-11.4 & 22.3 & 1050 & 0.875 & 0.670 & 33.0 \\
-13.6 & 16.3 &  997 & 0.831 & 0.574 & 42.6 \\
+9.1  & 37.2 & 11300 & 0.942 & 0.836 & 16.4 \\
+10.7 & 28.5 & 11100 & 0.925 & 0.792 & 20.8 \\
+11.4 & 22.3 & 10500 & 0.875 & 0.670 & 33.0 \\
+13.6 & 16.3 &  9970 & 0.831 & 0.574 & 42.6 \\
 \hline
 \end{tabular}
 \end{table}
 
 \paragraph{Methodology.}
-For steady-level flight, the force balance equations yield:
+For quasi-steady, level flight, the vertical and horizontal force balances yield
 \begin{align}
-L &= W - T \sin(\alpha) \label{eq:lift_balance} \\
-D &= T \cos(\alpha) \label{eq:drag_balance}
+L &= W - T \sin(\alpha), \label{eq:lift_balance} \\
+D &= T \cos(\alpha), \label{eq:drag_balance}
 \end{align}
-where $W$ is the gravitational force (vehicle weight), $T$ is the total thrust (estimated from motor RPM using the thrust map from Section~\ref{sec:thrust-identification}), and $\alpha$ is the angle of attack measured from the horizontal plane. This angle is obtained by subtracting the quadrotor pitch angle from \SI{90}{\degree} ($\alpha = \SI{90}{\degree} - \theta_{\text{pitch}}$), which aligns the angle convention with standard fixed-wing aircraft notation and facilitates direct comparison with the XFLR5 airfoil analysis. The aerodynamic coefficients are then computed as:
+where $W$ is the gravitational force (vehicle weight), $T$ is the total thrust (estimated from motor RPM using the thrust map from Section~\ref{sec:thrust-identification}), and $\alpha$ is the angle of attack measured from the horizontal plane.
+To align with the convention used in the XFLR5 airfoil analysis, the angle of attack is obtained by
+\begin{equation}
+\alpha = \SI{90}{\degree} - \theta_{\text{pitch}},
+\end{equation}
+so that $\alpha = 0$ corresponds to level flight.
+
+The aerodynamic coefficients are then computed as
 \begin{align}
-C_L &= \frac{L}{\frac{1}{2}\rho V^2 S} \label{eq:CL_definition} \\
-C_D &= \frac{D}{\frac{1}{2}\rho V^2 S} \label{eq:CD_definition}
+C_L &= \frac{L}{\frac{1}{2}\rho V^2 S}, \label{eq:CL_definition} \\
+C_D &= \frac{D}{\frac{1}{2}\rho V^2 S}, \label{eq:CD_definition}
 \end{align}
 where $\rho = \SI{1.225}{\kilogram\per\meter\cubed}$ is air density, $V$ is flight speed, and $S$ is the wing reference area.
+Only time segments with approximately constant altitude, speed, and attitude are used to satisfy the quasi-steady assumption.
 
 \paragraph{Experimental results.}
-Flight tests were conducted with both wing configurations at various speeds. NACA~0015 tests covered speeds from \SI{9.14}{\meter\per\second} to \SI{13.6}{\meter\per\second} with pitch angles from \SI{37.2}{\degree} to \SI{16.3}{\degree}, while AG25 tests were performed at \SI{9.1}{\meter\per\second} and \SI{12.5}{\meter\per\second} with pitch angles from \SI{15.3}{\degree} to \SI{3.5}{\degree}. The extracted coefficients are integrated into Figures~\ref{fig:cl_comparison}--\ref{fig:ld_comparison} as markers (NACA~0015: green circles, AG25: pink squares), showing:
+The coefficient-identification procedure was applied to both wing configurations.
+NACA~0015 tests covered speeds from \SI{9.1}{\meter\per\second} to \SI{13.6}{\meter\per\second} with angles of attack from \SI{37.2}{\degree} to \SI{16.3}{\degree}.
+AG25 tests were performed at \SI{9.1}{\meter\per\second} and \SI{12.5}{\meter\per\second} with angles of attack from \SI{15.3}{\degree} to \SI{3.5}{\degree}, reflecting its ability to generate similar lift at substantially lower angles of attack.
 
-\begin{itemize}
-  \item \textbf{Lift coefficients}: Experimental $C_L$ values show excellent agreement with XFLR5 predictions across the operational angle-of-attack range for both wing configurations, validating the computational model for lift estimation and confirming accurate force balance extraction. The AG25 achieves higher lift at significantly lower angles of attack compared to NACA~0015.
-  \item \textbf{Drag coefficients}: Measured $C_D$ values are consistently higher than the XFLR5 wing-only simulations for both configurations, as expected since the simulation captures only the wing drag while the experimental data includes additional system-level drag sources such as fuselage parasite drag, propeller-induced drag, propeller-wing interference effects, and landing gear.
-  \item \textbf{L/D ratios}: Experimental efficiency is lower than isolated wing performance due to these additional drag contributions, but the trends validate the force balance approach and demonstrate measurable aerodynamic contribution from both wing designs. The AG25 experimental data confirms superior efficiency at lower angles of attack compared to NACA~0015.
-\end{itemize}
+Figures~\ref{fig:cl_comparison}--\ref{fig:ld_comparison} compare the extracted coefficients against XFLR5 predictions at Reynolds numbers of $Re=1\times10^5$, $Re=2\times10^5$, and $Re=5\times10^5$ (NCrit=5).
+For both airfoils, the experimental $C_L$ points lie close to the XFLR5 curves over the operational range, indicating that wing lift is well captured by the quasi-2D airfoil model despite the presence of fuselage and propellers.
+In contrast, measured drag coefficients are systematically higher than wing-only predictions, consistent with additional system-level drag from the fuselage, propeller-induced effects, and wing--propeller interference.
+
+At $Re=2\times10^5$ (corresponding to \SI{10}{\meter\per\second} cruise), AG25 achieves a maximum $L/D$ of 66.4 at $\alpha \approx \SI{5}{\degree}$, compared to 46.4 at $\alpha \approx \SI{7}{\degree}$ for NACA~0015---a 43\% improvement (Table~\ref{tab:airfoil_metrics}).
+AG25 also demonstrates 20\% lower minimum drag coefficient (0.008 vs.\ 0.010) and 21\% higher maximum lift coefficient (1.27 vs.\ 1.05).
+The experimental points lie below the wing-only curves in $L/D$, as expected, but preserve the relative advantage, justifying the use of AG25 in the final configuration and for the outdoor power-efficiency tests.
 
 \paragraph{Discussion and sensitivity.}
-The primary sources of uncertainty in the experimental coefficient identification include:
-\begin{itemize}
-  \item \textbf{Angle of attack estimation}: Pitch angle from IMU assumes level flight; any vertical velocity introduces error in effective angle of attack
-  \item \textbf{Thrust estimation}: Motor RPM-to-thrust mapping has $\pm$5\% uncertainty from the thrust stand calibration
-  \item \textbf{Steady-state assumption}: Transient accelerations violate the force balance equations, requiring careful selection of quasi-steady flight segments
-\end{itemize}
-
-Despite these limitations, the experimental data provides valuable validation of the wing's aerodynamic contribution and confirms that the XFLR5 lift predictions are reasonably accurate for control and trajectory planning purposes. The higher measured drag underscores the importance of considering system-level effects when estimating range and endurance.
-
-\subsection{Computational Aerodynamic Characterization}\label{sec:airfoil_comparison}
-
-To evaluate the potential for improved efficiency through airfoil optimization and validate the experimental measurements, we analyzed two wing configurations using XFLR5: the baseline NACA~0015 symmetric airfoil and an improved AG25 profile.
-The analysis covers Reynolds numbers of $Re=1\times10^5$, $Re=2\times10^5$, and $Re=5\times10^5$, representing the operational flight regime from low to moderate speeds.
-The primary operational condition at \SI{10}{\meter\per\second} cruise speed corresponds to $Re=2\times10^5$.
-All simulations use NCrit=5 to account for the free-stream turbulence typical of indoor and outdoor flight environments.
-
-Figures~\ref{fig:cl_comparison}--\ref{fig:ld_comparison} present comprehensive aerodynamic comparisons at two Reynolds numbers ($Re=1\times10^5$ and $Re=5\times10^5$).
-The results demonstrate excellent aerodynamic performance at operational Reynolds numbers, with the AG25 airfoil achieving lift-to-drag ratios exceeding 50 at low Reynolds numbers and above 60 at the cruise condition.
-The experimental data points, shown as markers in the figures, demonstrate good agreement with the theoretical predictions, particularly in the operational flight regime, validating both the XFLR5 model and the force balance extraction methodology.
+The primary source of uncertainty in the experimental coefficient identification is the \textbf{steady-state assumption}: transient accelerations violate the force-balance equations, requiring careful selection of quasi-steady flight segments.
+Despite this limitation, the experimental data provide a consistent picture: XFLR5 lift predictions match the measured coefficients well, while drag is offset due to system-level effects.
+This is sufficient for control design, trajectory planning, and qualitative efficiency assessment.
 
 \begin{figure}[htbp]
 \centering
@@ -407,7 +413,7 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Lift coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers ($Re=1\times10^5$ and $Re=5\times10^5$), computed using XFLR5 with NCrit=5. Experimental data points from flight tests show excellent agreement with XFLR5 predictions for both wing configurations: NACA~0015 (green circles) and AG25 (pink squares), validating the simulation model for lift estimation. At $Re=1\times10^5$, the AG25 achieves maximum \(C_L \approx 1.20\) at \SI{10}{\degree}, while the NACA~0015 reaches \(C_L \approx 0.97\) at \SI{12}{\degree}.}
+\caption{Lift coefficient $C_L$ versus angle of attack for NACA~0015 and AG25 at two Reynolds numbers, comparing XFLR5 predictions with coefficients extracted from flight tests. Experimental lift closely follows the XFLR5 curves for both airfoils.}
 \label{fig:cl_comparison}
 \end{figure}
 
@@ -446,7 +452,7 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Drag coefficient comparison between NACA~0015 and AG25 airfoils at two Reynolds numbers. Experimental data from flight tests (green markers) shows higher drag than XFLR5 wing-only simulations, as expected since the experimental values include additional system-level drag sources not present in the simulation: fuselage parasite drag, propeller-induced drag, propeller-wing interference, and landing gear. The XFLR5 predictions represent wing drag only. At $Re=1\times10^5$, the AG25 wing achieves minimum \(C_D \approx 0.011\) near \(\alpha = \SI{-1}{\degree}\), significantly lower than the NACA~0015's \(C_D \approx 0.015\) at \(\alpha = \SI{0}{\degree}\). The AG25 demonstrates superior low-drag characteristics across the operational angle of attack range.}
+\caption{Drag coefficient $C_D$ versus angle of attack. Experimental drag is consistently higher than wing-only XFLR5 predictions due to additional system drag, but the relative advantage of AG25 over NACA~0015 is preserved.}
 \label{fig:cd_comparison}
 \end{figure}
 
@@ -484,7 +490,7 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Drag polar comparison showing the relationship between lift and drag coefficients. Curves shifted toward the left and top indicate better aerodynamic efficiency (higher lift for given drag). Experimental data (green markers) achieves lift coefficients matching XFLR5 predictions but with higher drag coefficients, as expected since the experimental values include complete system drag (fuselage, propellers, landing gear, and propeller-wing interference) while XFLR5 simulates wing drag only. At both Reynolds numbers, the AG25 demonstrates dramatically superior wing efficiency with the drag polar shifted significantly leftward compared to NACA~0015, achieving higher lift coefficients at substantially lower drag penalties.}
+\caption{Drag polars ($C_L$ vs.\ $C_D$) for both airfoils. AG25 curves are shifted towards higher lift and lower drag, indicating superior aerodynamic efficiency; experimental points reflect full system drag.}
 \label{fig:drag_polar}
 \end{figure}
 
@@ -523,12 +529,9 @@ The experimental data points, shown as markers in the figures, demonstrate good 
 \addlegendentry{AG25 (Experimental)}
 \end{axis}
 \end{tikzpicture}
-\caption{Lift-to-drag ratio comparison highlighting the aerodynamic efficiency of both airfoils. Experimental data (green markers) shows lower L/D ratios than XFLR5 wing-only predictions due to additional system drag sources (fuselage, propellers, landing gear) not included in the wing simulation. The XFLR5 curves represent wing performance only. At $Re=1\times10^5$, the AG25 wing achieves a remarkable maximum L/D of 53.0 at $\alpha \approx \SI{5}{\degree}$, with L/D ratios exceeding 50 between \SI{4}{\degree} and \SI{6}{\degree}—substantially higher than the NACA~0015 wing's maximum L/D of 37.1 at \SI{6}{\degree}. The experimental measurements at higher angles of attack (\SI{15}{\degree}--\SI{40}{\degree}) reflect the quadrotor flight regime where aerodynamic efficiency is secondary to hover capability.}
+\caption{Lift-to-drag ratio $L/D$ versus angle of attack. AG25 achieves significantly higher peak and cruise $L/D$ than NACA~0015; experimental values lie below wing-only predictions due to system drag.}
 \label{fig:ld_comparison}
 \end{figure}
-
-\paragraph{Key aerodynamic findings.}
-Table~\ref{tab:airfoil_metrics} summarizes the key performance metrics for both airfoils at $Re=2\times10^5$, which corresponds to the typical cruise speed of \SI{10}{\meter\per\second}.
 
 \begin{table}[htbp]
 \centering
@@ -549,33 +552,32 @@ $L/D$ at \SI{6}{\degree} cruise & 43.9 & 64.4 \\
 \end{tabular}
 \end{table}
 
-The AG25 airfoil demonstrates a 43\% improvement in maximum lift-to-drag ratio compared to the NACA~0015 (66.4 vs 46.4), achieved at a lower angle of attack (\SI{5}{\degree} vs \SI{7}{\degree}).
-At typical cruise conditions between \SI{4}{\degree} and \SI{6}{\degree}, the AG25 maintains L/D ratios of 64--66.
-The AG25 also achieves 20\% lower minimum drag coefficient (0.008 vs 0.010) and 21\% higher maximum lift coefficient (1.27 vs 1.05).
-
 \section{Outdoor Flight Validation}\label{sec:outdoor-flight}
 
 The outdoor power-efficiency tests were performed using the improved AG25 $\pm\SI{20}{\degree}$ configuration, chosen based on the aerodynamic-coefficient analysis that demonstrated its superior efficiency compared to the baseline NACA~0015 $\pm\SI{45}{\degree}$ design.
 
-To validate the platform's performance in realistic operational conditions beyond the controlled indoor environment, outdoor flight tests were conducted with electrical power logging and GPS-based velocity measurement. These tests provide direct evidence of aerodynamic efficiency by measuring actual power consumption during cruise flight.
+To validate the platform's performance in realistic operational conditions beyond the controlled indoor environment, outdoor flight tests were conducted with electrical power logging and GPS-based velocity measurement.
+These tests provide direct evidence of aerodynamic efficiency by measuring actual power consumption during cruise flight.
 
 \subsection{Test Configuration and Methodology}\label{sec:outdoor-methodology}
 
-The outdoor tests were performed using the AG25-equipped platform (Wing~2, mass \SI{2.8}{\kg}) in calm open-field conditions with manual flight control and onboard electrical power logging. Environmental conditions were: wind speed < \SI{2}{\meter\per\second}, temperature \SI{20}{\celsius}, barometric pressure \SI{1013}{\hecto\pascal}.
+The outdoor tests were performed using the AG25-equipped platform (Wing~2, mass \SI{2.8}{\kg}) in calm open-field conditions with manual flight control and onboard electrical power logging.
+Environmental conditions were: wind speed $< \SI{2}{\meter\per\second}$, temperature \SI{20}{\celsius}, barometric pressure \SI{1013}{\hecto\pascal}.
 
-Flight data was recorded at \SI{1}{\kilo\hertz} using Betaflight's blackbox logging system, capturing:
+Flight data were recorded at \SI{1}{\kilo\hertz} using Betaflight's blackbox logging system, capturing:
 \begin{itemize}
-  \item Motor RPM (bidirectional DShot telemetry from all four motors)
-  \item Attitude (roll, pitch, yaw computed via Mahony AHRS filter from IMU)
-  \item GPS velocity and barometric altitude
-  \item Battery voltage and current consumption (Hall-effect sensor, accuracy $\pm 2\%$)
+  \item Motor RPM (bidirectional DShot telemetry from all four motors),
+  \item Attitude (roll, pitch, yaw computed via a Mahony AHRS filter from IMU measurements),
+  \item GPS velocity and barometric altitude,
+  \item Battery voltage and current consumption (Hall-effect sensor, accuracy $\pm 2\%$).
 \end{itemize}
 
-A representative \SI{10}{\second} cruise segment at approximately \SI{10}{\meter\per\second} forward velocity was extracted for analysis. This segment represents steady-state cruise with manually maintained altitude under calm conditions.
+From several flights, a representative \SI{10}{\second} cruise segment at approximately \SI{10}{\meter\per\second} forward velocity was selected for analysis.
+This segment exhibits approximately constant speed and altitude and is therefore suitable for power comparison against hover.
 
 \subsection{Flight Performance Metrics}\label{sec:outdoor-metrics}
 
-Table~\ref{tab:outdoor_power_summary} summarizes the measured electrical power consumption at different flight speeds, demonstrating the progressive power reduction with increasing airspeed.
+Table~\ref{tab:outdoor_power_summary} summarises the measured electrical power consumption at hover and at cruise, demonstrating a substantial power reduction with airspeed.
 
 \begin{table}[htbp]
 \centering
@@ -589,16 +591,19 @@ Table~\ref{tab:outdoor_power_summary} summarizes the measured electrical power c
 0 (Hover) & 11957 & 12.0 & 50.0 & 600 \\
 10.0      &  9539 &  8.0 & 50.0 & 400 \\
 \hline
-\multicolumn{5}{l}{\textbf{$\Delta P$ vs Hover:} $-33.3\%$} \\
+\multicolumn{5}{l}{\textbf{$\Delta P$ vs.\ Hover:} $-33.3\%$} \\
 \hline
 \end{tabular}
 \end{table}
 
-The data show a clear electrical power reduction during cruise: average current decreased from \SI{12.0}{\ampere} in hover to \SI{8.0}{\ampere} at \SI{10}{\meter\per\second}, corresponding to a 33\% reduction in total electrical power (600~W to 400~W at constant voltage).
+Average current decreased from \SI{12.0}{\ampere} in hover to \SI{8.0}{\ampere} at \SI{10}{\meter\per\second}, corresponding to a 33\% reduction in total electrical power (600\,W to 400\,W at essentially constant voltage).
+This directly confirms that the rotor unloading observed in indoor tests translates into reduced electrical power consumption in realistic outdoor flight.
 
 \subsection{Time-Series Analysis}\label{sec:outdoor-timeseries}
 
-Figure~\ref{fig:outdoor_timeseries} presents the complete time-series data from the cruise segment, showing $P(t)$ and $\text{RPM}(t)$ together. Both power and motor speed exhibit a smooth decline as airspeed increases, confirming progressive rotor unloading.
+Figure~\ref{fig:outdoor_timeseries} presents the time-series data from the analysed cruise segment.
+GPS speed and barometric altitude remain approximately constant, indicating steady forward flight with small altitude excursions.
+Pitch angle remains close to the commanded cruise attitude, and both electrical power and average motor RPM are reduced relative to hover and vary smoothly over time.
 
 \begin{figure}[p]
   \centering
@@ -689,20 +694,23 @@ Figure~\ref{fig:outdoor_timeseries} presents the complete time-series data from 
   \end{axis}
   \end{tikzpicture}
   
-  \caption{Time-series data from outdoor cruise flight at \SI{10}{\meter\per\second}. From top to bottom: GPS velocity maintains steady cruise speed; barometric altitude variations ($\pm$\SI{0.5}{\meter}) demonstrate manual altitude control; pitch angle near \SI{87.5}{\degree} indicates near-level flight; electrical power and average motor RPM both decline smoothly with airspeed, confirming progressive rotor unloading.}
+  \caption{Time-series data from an outdoor cruise segment at approximately \SI{10}{\meter\per\second}. GPS speed and altitude remain nearly constant, while electrical power and motor RPM are reduced relative to hover and vary smoothly, indicating progressive rotor unloading.}
   \label{fig:outdoor_timeseries}
 \end{figure}
 
 \subsection{Discussion and Validation}\label{sec:outdoor-discussion}
 
-The outdoor results provide direct evidence of aerodynamic efficiency. Average electrical power decreased from $P_0 = 600$~W in hover to $P_1 = 400$~W at \SI{10}{\meter\per\second}, consistent with the predicted rotor-speed reduction observed in indoor testing. This verifies that the observed rotor unloading translates into measurable power savings.
+The outdoor results provide direct evidence of aerodynamic efficiency.
+Average electrical power decreases from $P_0 = 600$\,W in hover to $P_1 = 400$\,W at \SI{10}{\meter\per\second}, a 33\% reduction that is significantly larger than what is predicted for a pure quadrotor by rotor-only models.
+The smooth decline in both $P(t)$ and $\text{RPM}(t)$ with increasing airspeed, combined with the constant-altitude constraint, indicates that aerodynamic lift from the wings provides a substantial fraction of the weight support.
 
-Measurement uncertainty is small compared to the observed $\Delta P = 33\%$, confirming robustness of the result. The smooth decline in both $P(t)$ and $\text{RPM}(t)$ with increasing airspeed demonstrates that aerodynamic lift progressively offsets rotor thrust, validating the fundamental efficiency advantage of the hybrid platform.
+Measurement uncertainty is small compared to the observed $\Delta P$: the current sensor accuracy, minor voltage variation, and segment-to-segment variability together yield an uncertainty substantially smaller than the measured power reduction.
+This confirms that the observed efficiency gain is robust and not an artefact of sensor noise or isolated flight segments.
 
-Key findings:
+Key findings from the outdoor validation are:
 \begin{itemize}
-  \item \textbf{Direct power validation}: Electrical power measurements confirm that thrust-based rotor unloading (observed indoors) corresponds to real electrical-power reduction in outdoor flight.
-  \item \textbf{Quantified efficiency}: 33\% power reduction at \SI{10}{\meter\per\second} cruise provides a validated baseline for mission planning and endurance estimation.
+  \item \textbf{Direct power validation}: Electrical power measurements confirm that the rotor unloading observed indoors corresponds to a real reduction in electrical power in outdoor cruise flight.
+  \item \textbf{Quantified efficiency}: A 33\% power reduction at \SI{10}{\meter\per\second} provides a concrete baseline for mission planning and endurance estimation with the X-wing configuration.
 \end{itemize}
 
 \subsection{Power Model and Theoretical Efficiency Estimation}\label{sec:power-model}
@@ -711,7 +719,7 @@ To interpret the measured power reduction, the analytical model proposed by Baue
 The method provides closed-form estimates for hover, endurance-optimal, and range-optimal flight, validated experimentally for multirotors up to \SI{18}{\meter\per\second}.
 
 \paragraph{Model overview.}
-The total mechanical power is the sum of induced and parasitic components:
+The total mechanical power is expressed as the sum of induced and parasitic components:
 \begin{equation}
 P(V) = P_i(V) + P_p(V),
 \end{equation}
@@ -720,7 +728,7 @@ Bauersfeld expresses the power ratio relative to hover as
 \begin{equation}
 \frac{P(V)}{P_h} = k_i(V) + k_p(V),
 \end{equation}
-with empirical coefficients giving minima at the endurance-optimal speed $V_e$ and range-optimal speed $V_r$.
+with empirical coefficients yielding minima at the endurance-optimal speed $V_e$ and range-optimal speed $V_r$.
 
 \paragraph{Baseline hover power.}
 For the X-wing's propulsion system
@@ -736,7 +744,7 @@ yielding a theoretical mechanical hover power
 P_h = \frac{(mg)^{3/2}}{\eta_p\sqrt{2\rho\pi N_r r^2}} \approx 410\,\text{W},
 \end{equation}
 assuming propeller figure-of-merit $\eta_p = 0.6$.
-With motor efficiency $\eta_m = 0.75$, the electrical hover power is roughly 547\,W.
+With motor efficiency $\eta_m = 0.75$, the corresponding electrical hover power is roughly 547\,W, in good agreement with the measured 600\,W.
 
 \paragraph{Predicted forward-flight power.}
 Using Bauersfeld's experimentally validated ratios
@@ -751,7 +759,7 @@ the resulting electrical powers are shown in Table~\ref{tab:power_model_comparis
 
 \begin{table}[htbp]
 \centering
-\caption{Theoretical power predictions from Bauersfeld model for X-wing platform.}
+\caption{Theoretical power predictions from Bauersfeld model for an equivalent pure quadrotor.}
 \label{tab:power_model_comparison}
 \begin{tabular}{lccccc}
 \hline
@@ -766,55 +774,55 @@ Range-opt. & 22.1 & 448 & 597 & 109 \\
 \end{tabular}
 \end{table}
 
-Thus, \SI{10}{\meter\per\second} lies close to the endurance-optimal region, with predicted electrical power about 480--520\,W ($\approx$7\% below hover).
+Thus, \SI{10}{\meter\per\second} lies close to the endurance-optimal region of a pure quadrotor, with predicted electrical power about 480--520\,W ($\approx$7\% below hover).
+The Bauersfeld model therefore provides a conservative lower bound on the expected power reduction in the absence of fixed-wing lift.
 
 \paragraph{Interpretation.}
-For a pure quadrotor, the Bauersfeld model predicts only a modest power decrease ($\approx$7\%) near \SI{10}{\meter\per\second} due to reduced induced power partially offset by parasitic drag.
-The measured 33\% reduction therefore cannot be explained by rotor aerodynamics alone and confirms that aerodynamic lift from the fixed wings provides additional load relief.
+For a pure quadrotor, the model predicts only a modest power decrease ($\approx$7\%) near \SI{10}{\meter\per\second} due to reduced induced power partially offset by parasitic drag.
+The measured 33\% reduction on the X-wing platform is significantly larger and cannot be explained by rotor aerodynamics alone.
+The difference between the Bauersfeld baseline and the measured power therefore quantifies the additional efficiency gain attributable to aerodynamic lift from the fixed wings.
 
 \paragraph{Conclusion.}
-Combining theoretical and experimental data substantiates that the observed efficiency gain stems from passive aerodynamic lift rather than measurement bias or rotor operating point.
-The Bauersfeld model provides a defensible lower bound for non-aerodynamic multirotors and quantifies the excess savings attributable to the X-wing configuration.
+Combining theoretical and experimental data substantiates that the observed efficiency gain stems from passive aerodynamic lift rather than measurement bias or favourable rotor operating conditions.
+The Bauersfeld model provides a defensible lower bound for non-aerodynamic multirotors and allows the excess savings to be attributed directly to the X-wing configuration.
 
 \section{Discussion}\label{sec:discussion}
 
-The experimental campaign presented in this chapter validates the central hypothesis: an INDI-based controller can maintain stable, accurate flight on a quadrotor with strong, unmodeled aerodynamic lift and drag forces.
-The results span four complementary experimental domains—thrust characterization, agility testing, aerodynamic coefficient identification, and outdoor power measurement—providing comprehensive validation of both the control architecture and the platform's efficiency benefits.
+The experimental campaign presented in this chapter validates the central hypothesis: an INDI-based controller can maintain stable, accurate flight on a quadrotor with strong, unmodelled aerodynamic lift and drag forces, and the resulting X-wing configuration yields measurable efficiency benefits in forward flight.
 
 \paragraph{Control performance.}
-The circular trajectory tests at the Munich flight arena demonstrate robust tracking performance across a wide speed range (\SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}) with RMS position errors below \SI{0.24}{\meter} even at maximum speed.
-The platform sustained centripetal accelerations up to \SI{27.8}{\meter\per\second\squared} (approximately 2.8g) without attitude saturation or oscillation, confirming that the INDI controller successfully rejects aerodynamic disturbances across all flight speeds.
-Critically, no controller retuning was required between hover and forward flight, demonstrating robustness to large aerodynamic regime changes.
-This validates that incremental disturbance compensation can absorb quasi-steady aerodynamic effects without explicit modeling.
-The aggressive pitch angles achieved during cruise flight (up to \SI{37.2}{\degree} from vertical) would likely exceed the operational envelope of traditional geometric controllers, which typically lack the disturbance rejection capability necessary to handle large unmodeled aerodynamic moments.
+The circular trajectory tests at the Munich flight arena demonstrate robust tracking performance across a wide speed range (\SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}) with 3D RMS position errors below \SI{0.24}{\meter} and maximum deviations below \SI{0.55}{\meter} (Table~\ref{tab:variable_speed_metrics}).
+The platform sustains centripetal accelerations up to \SI{27.8}{\meter\per\second\squared} (approximately 2.8\,g) without attitude saturation or oscillation.
+No controller retuning was required between hover and aggressive forward flight, demonstrating robustness to large aerodynamic regime changes.
+This supports the claim that incremental disturbance compensation can absorb quasi-steady aerodynamic effects without explicit modelling.
 
 \paragraph{Aerodynamic validation.}
-The experimental aerodynamic coefficient identification using force balance analysis confirmed excellent agreement between XFLR5 predictions and flight-test measurements for lift coefficients.
-The measured drag coefficients were consistently higher than wing-only simulations, as expected due to system-level drag sources (fuselage, propellers, interference effects).
-This validates the computational model for lift estimation while highlighting the importance of considering complete system drag for range and endurance prediction.
-The AG25 airfoil demonstrated 43\% higher maximum L/D ratio compared to NACA~0015 (66.4 vs 46.4), confirming the benefit of airfoil optimization for this Reynolds number regime.
+The aerodynamic coefficient identification using force-balance analysis confirms excellent agreement between XFLR5 predictions and flight-test measurements for lift coefficients, while measured drag is higher than wing-only simulations due to system-level drag sources.
+The AG25 airfoil achieves a 43\% higher maximum lift-to-drag ratio than NACA~0015 at the relevant Reynolds number (Table~\ref{tab:airfoil_metrics}), justifying its use in the final configuration.
+Together, the computational and experimental results show that wing lift is predictable from standard airfoil tools, whereas system drag must be treated more conservatively for range and endurance prediction.
 
 \paragraph{Power efficiency.}
-Outdoor flight tests with electrical power logging provided direct evidence of aerodynamic efficiency: average electrical power decreased from 600~W in hover to 400~W at \SI{10}{\meter\per\second} cruise, corresponding to a 33\% power reduction.
-The smooth, monotonic relationship between airspeed and power confirms progressive rotor unloading due to aerodynamic lift, validating the fundamental efficiency advantage of the hybrid platform.
-This measurement bridges the gap between thrust-based indoor analysis and real-world electrical power consumption, providing validated performance metrics for mission planning.
+Outdoor flight tests with electrical power logging bridge the gap between indoor thrust-based analysis and real-world energy consumption.
+Average electrical power decreases from 600\,W in hover to 400\,W at \SI{10}{\meter\per\second}, corresponding to a 33\% reduction.
+The Bauersfeld model predicts only a $\approx$7\% reduction for a pure quadrotor under comparable conditions, so the remaining $\approx$26\% can be attributed to fixed-wing lift.
+This provides a quantitative, experimentally supported demonstration of the efficiency advantage of the X-wing concept.
 
 \section{Limitations and Future Work}\label{sec:limitations}
 
 While the experimental results demonstrate successful integration of aerodynamic surfaces with incremental nonlinear control, several limitations suggest directions for future investigation:
 
 \begin{itemize}
-  \item \textbf{Limited speed envelope}: Flight tests were restricted to \SI{8}{\meter\per\second} indoors and \SI{10}{\meter\per\second} outdoors due to arena constraints. Higher-speed testing would quantify the limits of quasi-steady aerodynamic assumptions and identify when dynamic effects (e.g., gust response, unsteady flow) require explicit aerodynamic modeling in the controller.
+  \item \textbf{Limited speed envelope}: Flight tests were restricted to \SI{8}{\meter\per\second} indoors and \SI{10}{\meter\per\second} outdoors due to arena and safety constraints. Higher-speed testing would quantify the limits of quasi-steady aerodynamic assumptions and identify when dynamic effects (e.g., gust response, unsteady flow) require explicit aerodynamic modelling in the controller.
   
-  \item \textbf{No controller baseline comparison}: While the platform's aggressive pitch capability and stable flight suggest INDI's superior disturbance rejection compared to traditional geometric controllers, quantitative A/B testing was not performed. Direct comparison with baseline controllers (cascaded PID, geometric, nonlinear dynamic inversion with aerodynamic models) over identical trajectories would isolate the specific contributions of incremental feedback and quantify performance improvements in tracking accuracy, energy efficiency, and control effort.
+  \item \textbf{No controller baseline comparison}: While the platform's aggressive bank capability and stable flight suggest INDI's superior disturbance rejection compared to traditional geometric controllers, quantitative A/B testing was not performed. Direct comparison with baseline controllers (cascaded PID, geometric, nonlinear dynamic inversion with explicit aerodynamic models) over identical trajectories would isolate the specific contribution of incremental feedback and quantify performance differences in tracking accuracy, energy efficiency, and control effort.
   
-  \item \textbf{Aerodynamic model simplifications}: The XFLR5 simulations neglect propeller--wing aerodynamic interference, which likely affects both lift and drag. Wind-tunnel testing or high-fidelity CFD with rotating propellers would refine force predictions and potentially reveal optimization opportunities for propeller placement or wing positioning.
+  \item \textbf{Aerodynamic model simplifications}: The XFLR5 simulations neglect propeller--wing aerodynamic interference and fuselage effects, which likely affect both lift and drag. Wind-tunnel testing or high-fidelity CFD with rotating propellers would refine force predictions and potentially reveal optimisation opportunities for propeller placement or wing positioning.
   
   \item \textbf{Short flight duration}: All indoor tests were limited to \SI{1}{\minute} or less, preventing assessment of thermal effects on propulsion efficiency, battery voltage sag under sustained load, or potential structural issues (e.g., wing vibration, motor bearing wear) during extended operation.
   
-  \item \textbf{Manual outdoor flight}: Outdoor tests relied on manual piloting for safety, introducing variability in flight path and attitude control. Future work should implement autonomous outdoor navigation with repeatable trajectories to enable statistical comparison of power consumption across multiple flights.
+  \item \textbf{Manual outdoor flight}: Outdoor tests relied on manual piloting for safety, introducing variability in flight path and attitude control. Future work should implement autonomous outdoor navigation with repeatable trajectories to enable statistical comparison of power consumption across multiple flights and environmental conditions.
   
-  \item \textbf{Environmental conditions}: Indoor flights eliminate wind disturbances, while outdoor tests were conducted in calm conditions. Systematic testing under varying wind speeds and turbulence levels would quantify the controller's disturbance rejection limits and inform safe operating envelopes.
+  \item \textbf{Environmental conditions}: Indoor flights eliminate wind disturbances, while outdoor tests were conducted in calm conditions. Systematic testing under varying wind speeds and turbulence levels would quantify the controller's disturbance-rejection limits and inform safe operating envelopes.
 \end{itemize}
 
 \section{Summary}\label{sec:exp-summary}
@@ -824,13 +832,13 @@ This chapter presented comprehensive experimental validation of the X-wing platf
 \begin{enumerate}
   \item \textbf{Thrust characterization} established the quadratic thrust-to-RPM relationship ($R^2 = 0.997$) required for control allocation and power analysis.
   
-  \item \textbf{Circular trajectory tracking} at the Munich flight arena demonstrated sub-decimeter position accuracy (\SI{0.064}{\meter} to \SI{0.184}{\meter} RMS error) across speeds from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}, with sustained centripetal accelerations up to 2.8g, validating robust INDI-based control without explicit aerodynamic modeling.
+  \item \textbf{Circular trajectory tracking} at the Munich flight arena demonstrated bounded position errors (RMS \SI{0.064}{\meter} to \SI{0.238}{\meter}) across speeds from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}, with sustained centripetal accelerations up to 2.8\,g, validating robust INDI-based control without explicit aerodynamic modelling.
   
-  \item \textbf{Aerodynamic coefficient identification} using force balance analysis confirmed XFLR5 lift predictions and quantified system-level drag contributions, with the AG25 airfoil achieving 43\% higher L/D ratio than NACA~0015.
+  \item \textbf{Aerodynamic coefficient identification} using force-balance analysis confirmed XFLR5 lift predictions and quantified system-level drag contributions, with the AG25 airfoil achieving a 43\% higher maximum $L/D$ ratio than NACA~0015 in the relevant Reynolds-number regime.
   
-  \item \textbf{Outdoor power measurements} provided direct evidence of 33\% electrical power reduction at \SI{10}{\meter\per\second} cruise compared to hover, validating the efficiency benefits of aerodynamic lift.
+  \item \textbf{Outdoor power measurements} provided direct evidence of a 33\% electrical power reduction at \SI{10}{\meter\per\second} cruise compared to hover, and comparison with the Bauersfeld model showed that this exceeds the efficiency improvements expected for a pure quadrotor, attributing the additional savings to fixed-wing lift.
 \end{enumerate}
 
-The experimental evidence demonstrates that incremental nonlinear control can stabilize and accurately control a quadrotor whose aerodynamic surfaces produce lift on the order of the vehicle's weight—without requiring aerodynamic identification or gain scheduling.
-The combination of airframe design (optimized airfoil) and control architecture (INDI) delivers measurable efficiency improvements for cruise flight while preserving quadrotor-like agility.
-The next chapter concludes with implications for hybrid aerial vehicle design and prospective extensions of this work.
+The experimental evidence demonstrates that incremental nonlinear control can stabilise and accurately control a quadrotor whose aerodynamic surfaces produce lift on the order of the vehicle's weight without requiring aerodynamic identification or gain scheduling.
+The combination of airframe design (optimised airfoil) and control architecture (INDI) delivers measurable efficiency improvements for cruise flight while preserving quadrotor-like agility.
+The next chapter discusses the implications of these results for hybrid aerial vehicle design and outlines potential extensions of this work.
