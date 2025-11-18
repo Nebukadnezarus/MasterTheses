@@ -1,79 +1,323 @@
-% !TeX root = ../main.tex
-
 \chapter{Control Architecture}\label{chapter:control-architecture}
+\label{chapter:control}
 
-The controller aims to maintain precise trajectory tracking on a multirotor whose aerodynamic forces are unmodeled but significant.
-The design therefore follows a minimal philosophy: \emph{compensate measured effects rather than predict them}.
-The architecture consists of a cascaded INDI structure with a geometric-based outer loop for position control and an INDI inner loop for attitude control.
-Aerodynamic forces from the fixed wings are never estimated or modeled; they are treated as slowly varying disturbances measured implicitly through the IMU.
+This chapter presents the control architecture used to stabilize and command the
+aerodynamically augmented quadrotor. The controller is organized into three
+conceptually distinct layers:
 
-\section{Overview}\label{sec:ctrl-overview}
-The overall control stack operates in three layers:
-\begin{itemize}
-\item \textbf{Reference generation} – produces dynamically feasible position, velocity, and yaw trajectories using differential-flatness polynomials.
-\item \textbf{Geometric-based outer INDI loop} – converts position/velocity errors into desired acceleration and attitude commands, with incremental compensation for aerodynamic forces.
-\item \textbf{INDI inner loop} – tracks the desired angular rates by incrementally adjusting motor thrusts based on measured angular accelerations.
-\end{itemize}
-This separation allows the aerodynamic effects—lift, drag, and induced moments—to appear only as disturbances in the measured accelerations, where they are cancelled incrementally rather than modeled.
+\begin{enumerate}
+    \item an \textbf{outer-loop translational controller} that regulates position
+    and generates a commanded specific force,
+    \item a \textbf{geometric attitude controller} on $SO(3)$ that converts the
+    commanded force into a desired orientation and computes a desired angular
+    acceleration, and
+    \item an \textbf{INDI inner loop} that realizes this angular acceleration
+    through incremental torque updates while rejecting unmodeled aerodynamic
+    disturbances.
+\end{enumerate}
 
-\section{Reference Generation}\label{sec:ref-gen}
-The quadrotor dynamics are differentially flat with respect to position and yaw.
-In forward-flight experiments, the desired yaw rate was computed from a coordinated-turn condition
+This hierarchical decomposition separates slow translational dynamics from fast
+rotational dynamics and ensures robustness to aerodynamic forces produced by
+the fixed wings. No aerodynamic model enters any part of the closed-loop
+control law; aerodynamic lift and drag appear only as disturbances and are
+rejected by the incremental structure of INDI.
+
+\begin{table}[t]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{lp{0.45\textwidth}l}
+\toprule
+\textbf{Parameter} & \textbf{Description} & \textbf{Value} \\
+\midrule
+\multicolumn{3}{c}{\textbf{Outer-Loop Translational Control}} \\
+\midrule
+$K_p$ & Position gain matrix & $\mathrm{diag}(5.0,\ 5.0,\ 5.0)$ \\
+$K_d$ & Velocity gain matrix & $\mathrm{diag}(2.8,\ 2.8,\ 2.8)$ \\
+$a_d$ & Feedforward acceleration & (from trajectory) \\
+\midrule
+\multicolumn{3}{c}{\textbf{Geometric Attitude Control (SO(3))}} \\
+\midrule
+$K_{att,xy}$ & Tilt (roll/pitch) attitude gain & $100$ \\
+$K_{att,z}$ & Yaw attitude gain & $4.5$ \\
+$K_\omega$ & Angular rate gain matrix & $\mathrm{diag}(16.0,\ 16.0,\ 1.5)$ \\
+$f(\cdot)$ & Tilt-prioritized mapping $e_R \mapsto \omega_d$ & (nonlinear) \\
+\midrule
+\multicolumn{3}{c}{\textbf{INDI Inner-Loop Torque Control}} \\
+\midrule
+$J$ & Inertia matrix & estimated \\
+$G$ & Allocation matrix & from geometry \\
+Thrust LUT & Static test-stand lookup & calibrated \\
+Voltage slices & LUT indexed by battery voltage & 6--10 slices \\
+$\tau = \tau_f + J(\alpha_d - \dot\omega_f)$ & INDI update & (definition) \\
+\midrule
+\multicolumn{3}{c}{\textbf{Filtering and Estimation}} \\
+\midrule
+$f_s$ & Filter sampling frequency & $300\,$Hz \\
+$f_c$ & Low-pass filter cutoff & $10\,$Hz \\
+$\omega_f$ & Filtered angular velocity & (IMU) \\
+$\dot{\omega}_f$ & Filtered angular acceleration & (IMU) \\
+$T_f$ & Total thrust from lookup table & (filtered) \\
+$a_{\mathrm{aero}}$ & Acceleration mismatch correction & enabled \\
+\bottomrule
+\end{tabular}
+\caption{Controller parameter overview for the outer-loop translational controller, geometric attitude controller, INDI inner loop, and associated filtering.}
+\label{tab:control-parameters}
+\end{table}
+
+\section{Overview of the Cascaded Architecture}
+
+The controller follows the three-layer structure introduced above:
+an outer-loop translational controller, a geometric attitude controller, and an INDI inner loop.
+The outer loop provides a commanded specific
+force $a_{\mathrm{cmd}}$ that aligns the vehicle's thrust vector with the
+desired translational acceleration. This force is mapped to a desired attitude
+$R_d \in SO(3)$, whose tracking is delegated to the geometric attitude
+controller. The geometric controller generates a desired angular acceleration
+$\alpha_d$ based on the attitude error. Finally, the INDI inner loop computes
+the necessary incremental changes in motor thrusts to realize $\alpha_d$ and
+the commanded collective thrust.
+
+The complete set of controller gains and model parameters used in the cascaded
+architecture is summarized in Table~\ref{tab:control-parameters}.
+All variables and mathematical symbols used in this chapter are summarized in Table~\ref{tab:notation-control}.
+
+\section{Outer-Loop Translational Control}
+\label{sec:outer-loop}
+
+The outer loop regulates position and velocity in $\mathbb{R}^3$. Its purpose is
+to generate a \emph{commanded specific force} --- an acceleration in the world
+frame that the attitude controller should realize through appropriate
+orientation of the thrust vector.
+
+\subsection{Commanded Translational Acceleration}
+
+Given desired position $p_d$, velocity $v_d$, feedforward acceleration $a_d$,
+and yaw $\psi_d$, the commanded acceleration is computed using a linear PD
+controller:
+\begin{equation}
+a_{\mathrm{cmd}} =
+K_p(p_d - p) + K_d(v_d - v) + a_d - g.
+\label{eq:outer-pd}
+\end{equation}
+
+The formulation is intentionally simple. Because aerodynamic forces are handled
+as disturbances at the lower levels, the translational controller does not rely
+on an aerodynamic model.
+
+\subsection{Acceleration Mismatch Disturbance Estimate}
+
+During horizontal flight, the wings generate significant aerodynamic lift and
+drag. These forces appear in the translational dynamics as unmodeled
+disturbances. A lightweight acceleration-mismatch observer improves outer-loop
+performance without compromising robustness.
+
+Let $\hat{a}$ be the filtered specific force measured by the IMU and
+$T_f$ the filtered estimate of the current total thrust produced by the rotors.
+The aerodynamic disturbance in the world frame is estimated as
+\begin{equation}
+a_{\mathrm{aero}} = 
+R\left(\frac{T_f}{m} e_3 - \hat{a}\right),
+\end{equation}
+where $R$ is the current attitude. This quantity captures discrepancies between
+the expected thrust-induced acceleration and the actual measured acceleration,
+which arise primarily from aerodynamic forces.
+
+When the vehicle is at sufficient altitude and speed, this term improves
+tracking performance by compensating for drag and unmodeled lift:
+\begin{equation}
+a_{\mathrm{cmd}} \gets a_{\mathrm{cmd}} + a_{\mathrm{aero}}.
+\end{equation}
+
+\subsection{Desired Thrust}
+
+The outer loop computes the commanded collective thrust:
+\begin{equation}
+T_{\mathrm{cmd}} = m\, a_{\mathrm{cmd}}^\top R e_3,
+\end{equation}
+where $e_3 = [0\;0\;1]^\top$. This scalar is passed to the inner loop.
+
+\section{Geometric Attitude Control on \texorpdfstring{$SO(3)$}{SO(3)}}
+\label{sec:geometric-attitude}
+
+The geometric attitude controller converts the commanded specific force
+$a_{\mathrm{cmd}}$ into a desired attitude and generates a desired angular
+acceleration that the INDI loop must realize.
+
+\subsection{Desired Attitude Construction}
+
+To realize $a_{\mathrm{cmd}}$, the thrust vector must be aligned with
+$-z_B$. The desired body $z$-axis is therefore
+\begin{equation}
+z_B = \frac{a_{\mathrm{cmd}}}{\|a_{\mathrm{cmd}}\|}.
+\end{equation}
+
+A desired horizontal heading is obtained from $\psi_d$ or from a forward
+velocity direction when appropriate. This defines the desired $x_B$, and the
+desired $y_B$ follows from orthogonality:
 \[
-\dot{\psi}_d \approx \frac{a_{y,d}}{V_d\cos\theta_d},
+R_d = \big[\,x_B\;\; y_B\;\; z_B\,\big].
 \]
-aligning the vehicle's $x$-axis with its velocity vector and minimizing sideslip.
 
-\section{Geometric Outer Loop}\label{sec:outer}
-The outer loop computes a commanded acceleration
+This construction ensures that the translational controller dictates the thrust
+vector orientation.
+
+\subsection{Geometric Attitude Error}
+
+Attitude error is defined directly on the manifold $SO(3)$ using the canonical
+geometric error~\cite{Lee2010}:
 \begin{equation}
-\mathbf{a}_c = \mathbf{K}_p(\mathbf{p}_d-\mathbf{p})
-             + \mathbf{K}_v(\dot{\mathbf{p}}_d-\dot{\mathbf{p}})
-             + \ddot{\mathbf{p}}_d - \mathbf{g},
-\label{eq:ac-nom}
-\end{equation}
-which is converted to a desired attitude $R_d$ and collective thrust $f_{\text{coll}}$ via
-\begin{equation}
-f_{\text{coll}} = m\,\mathbf{a}_c^\top (R\mathbf{e}_3).
-\label{eq:thrust-proj}
+e_R = 
+\frac{1}{2}\left(R_d^\top R - R^\top R_d\right)^\vee.
+\label{eq:geometric-error}
 \end{equation}
 
-To account for unmodeled aerodynamic lift, the measured specific-force residual between expected rotor thrust and IMU acceleration is incrementally added:
-\begin{equation}
-\mathbf{a}_{\text{corr}} = R\!\left(\frac{f_T}{m}\mathbf{e}_3 - \mathbf{a}_{\text{IMU}}\right).
-\label{eq:aero-comp-outer}
-\end{equation}
-The corrected acceleration command becomes $\mathbf{a}_c \leftarrow \mathbf{a}_c + \mathbf{a}_{\text{corr}}$.
-This outer INDI layer, based on geometric control principles, acts as a real-time aerodynamic feedforward: it cancels any steady lift or drag without identifying parameters.
+This error represents the minimal rotation that aligns $R$ with $R_d$ and avoids
+the singularities of Euler-angle parameterizations. For numerical robustness, an equivalent quaternion-based implementation of~\eqref{eq:geometric-error} is used, but the underlying control law is defined on $SO(3)$.
 
-\section{INDI Inner Loop}\label{sec:indi}
-The inner loop enforces the commanded angular acceleration using incremental updates
+\subsection{Desired Angular Rate and Angular Acceleration}
+
+A nonlinear mapping from the attitude error to a desired angular rate yields
+\[
+\omega_d = f(e_R),
+\]
+where $f$ preserves yaw decoupling and prioritizes pitch and roll tracking.
+
+Angular acceleration is then computed using proportional feedback on the rate
+error:
 \begin{equation}
-\Delta\mathbf{u} = B^{-1}(\dot{\boldsymbol{\omega}}_d - \dot{\boldsymbol{\omega}}_k),
+\alpha_d = \omega_d + K_\omega(\omega_d - \omega).
+\label{eq:alpha-des}
+\end{equation}
+
+Although the controller computes rates and accelerations internally, the
+regulated variable is \emph{attitude}. The geometric layer provides
+$\alpha_d$ to the INDI inner loop.
+
+\section{INDI Inner-Loop Attitude Control}
+\label{sec:indi}
+
+Incremental Nonlinear Dynamic Inversion (INDI) is used to track the desired
+angular acceleration $\alpha_d$ and reject all unmodeled disturbances,
+including those caused by aerodynamic forces from the wings. Unlike classical
+dynamic inversion, INDI does not rely on an accurate model of the rotational
+dynamics. Instead, it uses motor-speed feedback and filtered gyro acceleration
+to compute incremental changes to the control input.
+
+\subsection{Thrust and Torque Estimation}
+
+Rotor thrusts are estimated using a static lookup table obtained from
+test-stand measurements. The table maps motor command inputs to measured
+thrust values for multiple battery voltages. During flight, the current
+voltage is used to interpolate between table slices, yielding an accurate
+estimate of the instantaneous rotor thrusts $T_i$.
+These thrusts are mapped through the allocation matrix $G$ to produce the
+estimated torque:
+\[
+\tau_f = (G T_f)_{1:3}.
+\]
+This approach eliminates dependence on a parametric thrust model and provides
+accurate thrust estimates even under voltage sag, temperature changes, or
+motor heating.
+
+\subsection{Incremental Torque Update}
+
+The INDI update law is:
+\begin{equation}
+\tau =
+\tau_f + J(\alpha_d - \dot\omega_f),
 \label{eq:indi-update}
 \end{equation}
-where $B$ is the local control-effectiveness matrix obtained from static identification.
-Because aerodynamic moments vary slowly relative to the 500\,Hz control rate, their difference $\Delta\mathbf{d}\approx 0$ over each step, and thus their influence cancels.
+where $\dot{\omega}_f$ is the filtered angular acceleration measured by the IMU.
+This expression cancels the measured angular acceleration and replaces it with
+the desired one. Consequently, any slowly varying disturbance torque ---
+including aerodynamic moments --- is automatically rejected.
 
-This property—rejection of quasi-steady disturbances—makes INDI well suited for aerodynamic surface-enhanced vehicles, where modeling the unsteady flow is impractical.
+\subsection{Allocation to Rotor Thrusts}
 
-\section{Implementation Details}\label{sec:implementation}
+The commanded torque is combined with the commanded collective thrust:
+\[
+\mu = [T_{\mathrm{cmd}},\, \tau]^\top,
+\]
+and mapped to rotor thrusts using the allocation matrix:
+\[
+T = G^{-1}\mu.
+\]
+
+This yields the four motor thrust commands.
+
+\section{Stability Discussion}
+
+The controller is stable under standard assumptions:
+
 \begin{itemize}
-\item \textbf{Software stack}: The control architecture is based on the Agilicious framework~\cite{Foehn2022} from the University of Zurich, adapted for INDI-based control and implemented in ROS~1 (Noetic) on a Jetson Orin Nano, communicating via MAVLink with a Kakute H7 flight controller running modified Betaflight firmware.
-\item \textbf{Update rates}: Outer loop 300\,Hz; inner loop 300\,Hz; IMU 8\,kHz; motor commands sent at 8\,kHz DShot.
-\item \textbf{Sensor feedback}: Position and attitude from Vicon motion capture at 200\,Hz; angular rates and accelerations from the flight-controller IMU.
-\item \textbf{Filtering}: Outer-loop filter at 300\,Hz with 10\,Hz cut-off frequency for INDI residuals.
+    \item The geometric attitude error~\eqref{eq:geometric-error} admits a
+    Lyapunov function on $SO(3)$.
+    \item The outer-loop linear controller operates on slower translational
+    dynamics, allowing separation of time scales.
+    \item INDI accurately realizes $\alpha_d$ as long as motor dynamics are fast
+    relative to attitude dynamics.
+    \item Aerodynamic forces and torques appear only as slowly varying
+    disturbances and are canceled by the incremental term
+    $(\alpha_d - \dot\omega_f)$.
 \end{itemize}
 
-\section{Stability and Design Logic}\label{sec:stability}
-No explicit aerodynamic model enters the control law; stability arises from the incremental formulation.
-Because both outer and inner loops respond only to \emph{changes} in measured acceleration, any quasi-steady aerodynamic component (e.g., lift from wings) vanishes from the control error.
-This design directly tests the thesis hypothesis: that accurate control is achievable on an aerodynamically augmented multirotor without aerodynamic parameter identification.
+\section{Summary}
 
-\section{Summary}\label{sec:ctrl-summary}
-The implemented controller combines the disturbance rejection of INDI at both control levels with the geometric control structure of a conventional multirotor.
-Its novelty lies not in new mathematics but in the demonstration that this cascaded INDI architecture remains stable and precise under strong, unmodeled aerodynamic loads.
-The following chapter details the experimental setup used to verify this claim.
+The control architecture is a clean cascade: a linear translational controller
+commands a specific force, a geometric attitude controller generates a desired
+angular acceleration, and an INDI inner loop realizes this acceleration while
+rejecting aerodynamic disturbances. This architecture leverages the aerodynamic
+benefits of fixed wings without requiring an aerodynamic model, enabling
+efficient forward flight with disturbance robustness.
 
-% --- References used in this chapter ---
-% \cite{Mellinger2011}
+\begin{longtable}{lp{0.65\textwidth}}
+\caption{Notation used in the control architecture chapter.}
+\label{tab:notation-control}\\
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endfirsthead
+\multicolumn{2}{c}{\tablename\ \thetable\ -- continued from previous page} \\
+\toprule
+\textbf{Symbol} & \textbf{Description} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{Continued on next page} \\
+\endfoot
+\bottomrule
+\endlastfoot
+$p, v$ & Position and velocity in world frame ($\mathbb{R}^3$) \\
+$p_d, v_d, a_d$ & Desired position, velocity, and feedforward acceleration \\
+$\psi_d$ & Desired yaw angle \\
+$g$ & Gravity vector $[0\;0\;9.81]^\top$ \\
+$m$ & Vehicle mass \\
+$a_{\mathrm{cmd}}$ & Commanded translational acceleration (outer loop output) \\
+$a_{\mathrm{aero}}$ & Estimated aerodynamic acceleration disturbance \\
+$\hat{a}$ & Filtered IMU specific force measurement \\
+$T_{\mathrm{cmd}}$ & Commanded collective thrust \\
+$T_f$ & Estimated total thrust from filtered motor speeds \\
+$T_i$ & Thrust of rotor $i$ \\
+$R$ & Current attitude (rotation matrix in $SO(3)$) \\
+$R_d$ & Desired attitude constructed from $a_{\mathrm{cmd}}$ and $\psi_d$ \\
+$q, q_d$ & Current and desired attitude (quaternions) \\
+$e_R$ & Geometric attitude error on $SO(3)$ \\
+$\omega$ & Angular velocity in body frame \\
+$\omega_d$ & Desired angular velocity from geometric controller \\
+$\alpha_d$ & Desired angular acceleration (input to INDI) \\
+$K_p, K_d$ & Position and velocity gain matrices \\
+$K_\omega$ & Angular rate gain matrix \\
+$G$ & Allocation matrix mapping rotor thrusts to forces/moments \\
+$G^{-1}$ & Allocation inverse mapping force--moment input to rotor thrusts \\
+$\tau_f$ & Current torque estimate from rotor thrusts \\
+$\tau$ & Desired torque after INDI update \\
+$J$ & Inertia matrix of the vehicle \\
+$\dot{\omega}_f$ & Filtered angular acceleration (IMU-derived) \\
+$\mu$ & Force–moment command vector $\mu = [T_{\mathrm{cmd}}, \tau]^\top$ \\
+$x_B, y_B, z_B$ & Desired body axes for constructing $R_d$ \\
+$e_3$ & Unit vector $[0\;0\;1]^\top$ \\
+$f(\cdot)$ & Tilt-prioritized nonlinear mapping $e_R \mapsto \omega_d$ \\
+$(\cdot)^\vee$ & Vee map: skew-symmetric matrix to vector \\
+$(\cdot)^\wedge$ & Hat map: vector to skew-symmetric matrix \\
+\end{longtable}
+
