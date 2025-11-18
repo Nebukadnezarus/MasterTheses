@@ -128,7 +128,6 @@ Unit aerodynamic directions in $\mathcal{B}$ (from $\mathbf{v}_a$):
 \[
 \hat{\mathbf{v}}=\frac{\mathbf{v}_a}{V},\quad
 \hat{\mathbf{z}}_L=\frac{\hat{\mathbf{v}}\times\mathbf{e}_y}{\|\hat{\mathbf{v}}\times\mathbf{e}_y\|},\quad
-\hat{\mathbf{y}}_S=\frac{\mathbf{e}_z\times\hat{\mathbf{v}}}{\|\mathbf{e}_z\times\hat{\mathbf{v}}\|},
 \]
 so that lift is perpendicular to the flow in the body $x$–$z$ plane, drag opposes $\hat{\mathbf{v}}$, and side force is lateral.
 
@@ -137,7 +136,6 @@ Aerodynamic force in $\mathcal{B}$:
 \mathbf{F}_{\!aero}
 = \underbrace{q S\,C_L(\alpha)\,\hat{\mathbf{z}}_L}_{\text{lift}}
 \;-\; \underbrace{q S\,C_D(\alpha)\,\hat{\mathbf{v}}}_{\text{drag}}
-\;+\; \underbrace{q S\,C_Y(\beta)\,\hat{\mathbf{y}}_S}_{\text{side}}.
 \label{eq:Faero}
 \end{equation}
 The aerodynamic forces in~\eqref{eq:Faero} are used only for off-line analysis; they are not used in the controller.

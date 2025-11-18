@@ -129,8 +129,11 @@ The onboard software stack consists of ROS~1 Noetic running on the Jetson Orin N
 
 \item \textbf{Companion Computer} (Jetson Orin Nano):
 \begin{itemize}
-\item Geometric outer loop controller (300\,Hz)
-\item INDI inner loop controller (300\,Hz)
+\item Translational outer loop controller (300\,Hz)
+\item Force-to-attitude mapping
+\item Geometric attitude and rate controller (300\,Hz)
+\item INDI inner loop torque refinement (300\,Hz)
+\item Motor allocation
 \item State estimation (Vicon feedback processing)
 \item MAVLink communication interface
 \item Local telemetry logging
