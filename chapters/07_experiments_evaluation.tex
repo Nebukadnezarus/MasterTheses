@@ -16,13 +16,17 @@ The experiments address four key objectives:
 The thrust-characterization procedure described in Section~\ref{sec:thrust-characterization} produced 975 measurements under the 6\,S 2\,P power configuration.
 A quadratic model was fitted to the zero-offset-corrected data:
 \begin{equation}
-T = 5.15 \times 10^{-8}\,\text{RPM}^2 - 0.09 \times 10^{-3}\,\text{RPM},
+T = 5.15 \times 10^{-8}\,\Omega^2 - 0.09 \times 10^{-3}\,\Omega,
 \label{eq:thrust-rpm-fit}
 \end{equation}
-with coefficient of determination $R^2 = 0.997$ (Figure~\ref{fig:thrust_vs_rpm}).
+where $\Omega$ is the motor speed in units of RPM, with coefficient of determination $R^2 = 0.997$ (Figure~\ref{fig:thrust_vs_rpm}).
 
 The quadratic dependence confirms the classical blade-element scaling $T \propto \Omega^2$ and validates the assumption used in the control allocation.
-This mapping is used throughout all flight experiments to translate desired thrust into commanded motor speeds and to estimate thrust from measured RPM when reconstructing aerodynamic forces.
+This mapping serves two purposes in the experimental workflow:
+\begin{enumerate}
+    \item \textbf{Thrust estimation from measured motor speeds}: During post-flight analysis, equation~\eqref{eq:thrust-rpm-fit} is used to estimate rotor thrust forces from measured motor RPM, enabling reconstruction of aerodynamic forces via force-balance analysis.
+    \item \textbf{Control allocation}: The inverse mapping from desired thrust to motor command is implemented in the real-time controller to translate control outputs into ESC duty cycles.
+\end{enumerate}
 
 \begin{figure}[htbp]
   \centering
@@ -42,7 +46,22 @@ This mapping is used throughout all flight experiments to translate desired thru
   \label{fig:thrust_vs_rpm}
 \end{figure}
 
-To interface with the low-level motor controller, a linear mapping between command and RPM was identified (Figure~\ref{fig:rpm_vs_cmd}). This provides a simple feedforward relationship for allocating thrust commands to ESC duty cycles.
+Figure~\ref{fig:thrust_vs_cmd} shows the direct mapping between motor command and thrust, which is the primary relationship used in the flight controller to convert desired thrust commands from the control allocation into ESC duty cycle commands. Both the thrust-to-command mapping and the command-to-motor-speed relationship vary with battery voltage due to electrical system dynamics. The implementation uses lookup tables to account for these voltage-dependent effects, ensuring consistent thrust response across the flight envelope.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[tumplot, xlabel={Command [-]}, ylabel={Thrust [N]}, width=0.8\textwidth]
+      \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
+        table[x=cmd, y=force_z_N, col sep=comma]{data/thrust_vs_cmd_data.csv};
+      \addlegendentry{Measured data}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Static thrust as a function of motor command. This relationship is used by the flight controller to map desired thrust into ESC duty cycles.}
+  \label{fig:thrust_vs_cmd}
+\end{figure}
+
+For reference, Figure~\ref{fig:rpm_vs_cmd} shows the linear mapping between command and motor speed. The near-linear relationship simplifies the prediction of motor speed from control inputs during nominal operation.
 
 \begin{figure}[htbp]
   \centering
@@ -58,23 +77,8 @@ To interface with the low-level motor controller, a linear mapping between comma
       \addlegendentry{Linear fit ($R^2=0.991$)}
     \end{axis}
   \end{tikzpicture}
-  \caption{Static mapping between motor command and RPM. The near-linear relationship simplifies thrust allocation and allows RPM prediction from control inputs.}
+  \caption{Static mapping between motor command and RPM. The near-linear relationship allows prediction of motor speed from control inputs.}
   \label{fig:rpm_vs_cmd}
-\end{figure}
-
-For completeness, Figure~\ref{fig:thrust_vs_cmd} shows the direct mapping between motor command and thrust. This relationship is used only for sanity checks; all subsequent analysis relies on the RPM-based thrust model in \eqref{eq:thrust-rpm-fit}.
-
-\begin{figure}[htbp]
-  \centering
-  \begin{tikzpicture}
-  \begin{axis}[tumplot, xlabel={Command [-]}, ylabel={Thrust [N]}, width=0.8\textwidth]
-      \addplot[only marks, mark=*, mark size=1pt, opacity=0.5, TUMBlue]
-        table[x=cmd, y=force_z_N, col sep=comma]{data/thrust_vs_cmd_data.csv};
-      \addlegendentry{Measured data}
-    \end{axis}
-  \end{tikzpicture}
-  \caption{Static thrust as a function of motor command. This plot illustrates the overall control authority of the propulsion system.}
-  \label{fig:thrust_vs_cmd}
 \end{figure}
 
 \section{Trajectory-Tracking Performance and Agility}\label{sec:tracking-performance}
@@ -88,8 +92,9 @@ Closed-loop tracking was tested on horizontal circles at cruise speeds between \
 Two reference radii were used: \SI{2.0}{\meter} for \SI{3}{\meter\per\second} and \SI{5}{\meter\per\second}, and \SI{2.3}{\meter} for \SI{6.5}{\meter\per\second} and \SI{8}{\meter\per\second}.
 The corresponding centripetal accelerations span from \SI{4.5}{\meter\per\second\squared} at \SI{3}{\meter\per\second} up to \SI{27.8}{\meter\per\second\squared} (approximately 2.8\,g) at \SI{8}{\meter\per\second}.
 
-Figure~\ref{fig:variable_speed_trajectories} shows the resulting trajectories.
+Figure~\ref{fig:variable_speed_trajectories} shows the resulting trajectories in the horizontal plane.
 The vehicle follows the reference circles with small lateral deviations across the entire speed range; deviations remain clearly bounded even at the highest speed.
+Figure~\ref{fig:variable_speed_trajectories_xz} shows the same trajectories in the vertical XZ plane, demonstrating that altitude is maintained with minimal vertical excursions throughout the maneuvers.
 
 \begin{figure}[htbp]
   \centering
@@ -133,6 +138,181 @@ The vehicle follows the reference circles with small lateral deviations across t
   \end{tikzpicture}
   \caption{Circular trajectory tracking at cruise speeds from \SI{3}{\meter\per\second} to \SI{8}{\meter\per\second}. The measured paths remain close to the reference circles for all speeds.}
   \label{fig:variable_speed_trajectories}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={X Position [\si{\meter}]},
+    ylabel={Z Position [\si{\meter}]},
+    axis equal,
+    legend style={at={(0.5,1.05)}, anchor=south, font=\small, legend columns=4},
+    grid=major,
+  ]
+  % Measured XZ trajectories at different speeds
+  \addplot[TUMBlue, thick, mark=none] 
+    table[x=x, y=z, col sep=comma]{data/circle/circle_trajectory_xz_30mps.csv};
+  \addlegendentry{\SI{3}{\meter\per\second}}
+  
+  \addplot[TUMAccentOrange, thick, mark=none] 
+    table[x=x, y=z, col sep=comma]{data/circle/circle_trajectory_xz_50mps.csv};
+  \addlegendentry{\SI{5}{\meter\per\second}}
+  
+  \addplot[TUMAccentGreen, thick, mark=none] 
+    table[x=x, y=z, col sep=comma]{data/circle/circle_trajectory_xz_65mps.csv};
+  \addlegendentry{\SI{6.5}{\meter\per\second}}
+  
+  \addplot[TUMAccentPink, thick, mark=none] 
+    table[x=x, y=z, col sep=comma]{data/circle/circle_trajectory_xz_80mps.csv};
+  \addlegendentry{\SI{8}{\meter\per\second}}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Circular trajectories in XZ plane showing altitude variations during turns at different speeds. The vehicle maintains relatively constant altitude with small vertical deviations.}
+  \label{fig:variable_speed_trajectories_xz}
+\end{figure}
+
+\subsection{Detailed Flight Dynamics at \SI{8}{\meter\per\second}}\label{sec:8mps-dynamics}
+
+To illustrate the transient behaviour during an aggressive circular maneuver, Figure~\ref{fig:8mps_dynamics} presents synchronized time-series data from a representative lap at \SI{8}{\meter\per\second}.
+The data include position tracking errors, velocity magnitude, acceleration magnitude, and aerodynamic force magnitude, all extracted from IMU measurements and motion-capture ground truth.
+
+Aerodynamic forces are reconstructed using a force-balance approach based on IMU-measured specific forces and orientation.
+The IMU measures specific force $\mathbf{f}_b$ in the body frame.
+Given the rotation matrix $\mathbf{R}_{bw}$ from body to world frame, the total force in the body frame is
+\begin{equation}
+\mathbf{F}_{\text{sum},b} = m \mathbf{f}_b,
+\label{eq:force_balance_imu}
+\end{equation}
+where $m = \SI{2.5}{\kilogram}$ is the vehicle mass.
+Thrust force is estimated from measured motor RPM using equation~\eqref{eq:thrust-rpm-fit} and acts along the body z-axis: $\mathbf{F}_{\text{thrust},b} = [0, 0, T_{\text{total}}]^T$.
+The aerodynamic force in the body frame is then obtained as the residual:
+\begin{equation}
+\mathbf{F}_{\text{aero},b} = \mathbf{F}_{\text{sum},b} - \mathbf{F}_{\text{thrust},b}.
+\label{eq:aero_force_extraction}
+\end{equation}
+Finally, both thrust and aerodynamic forces are rotated to the world frame for analysis:
+\begin{equation}
+\mathbf{F}_{\text{aero},w} = \mathbf{R}_{bw} \mathbf{F}_{\text{aero},b}
+\end{equation}
+This reconstruction assumes quasi-steady flight (negligible angular acceleration effects on the IMU measurements) and accurate thrust mapping, both of which are satisfied during the stable circular trajectories analyzed here.
+
+The position errors (top panel) remain bounded throughout the turn, with horizontal errors (e\_x, e\_y) staying below \SI{0.55}{\meter} and vertical error (e\_z) exhibiting small oscillations around the reference altitude.
+Velocity magnitude (second panel) stabilizes near the commanded \SI{8}{\meter\per\second} after the initial transient, demonstrating consistent speed tracking.
+Acceleration magnitude (third panel) shows peaks corresponding to centripetal acceleration during the turn, with values approaching \SI{30}{\meter\per\second\squared} ($\approx$3\,g).
+
+The fourth panel compares the magnitudes of aerodynamic and thrust forces.
+Aerodynamic force magnitude grows rapidly as the vehicle enters the turn, reaching peak values of above \SI{20}{\newton}---comparable to the weight of the wing assembly itself.
+Simultaneously, the thrust force magnitude is just above \SI{60}{\newton}.
+
+The bottom panel shows the aerodynamic force decomposed into world-frame components (x, y, z).
+Notably, the horizontal components (x, y) dominate with magnitudes exceeding \SI{20}{\newton}, while the vertical component (z-axis) remains near zero throughout the maneuver.
+This force distribution reveals that the wings contribute primarily drag rather than lift during forward flight---the horizontal forces represent aerodynamic drag and centripetal side forces, while the negligible vertical component indicates minimal lift generation from the wing surfaces.
+The dominance of horizontal aerodynamic forces confirms that thrust vectoring through body attitude, rather than wing lift, provides the primary mechanism for generating lift.
+
+This synchronized view confirms that the INDI controller maintains stable tracking throughout aggressive maneuvers despite substantial time-varying aerodynamic loads comparable in magnitude to the wing assembly weight.
+The smooth force profiles and bounded tracking errors indicate that incremental feedback successfully compensates for the unmodelled aerodynamic disturbances without requiring explicit force prediction or feedforward terms.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.2\textheight,
+    xlabel={},
+    ylabel={Error [m]},
+    legend style={at={(0.5,1.05)}, anchor=south, legend columns=3, font=\small},
+    grid=major,
+    xticklabels={},
+  ]
+  \addplot[TUMBlue, thick] table[x=time, y=err_x, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$e_x$}
+  \addplot[TUMAccentOrange, thick] table[x=time, y=err_y, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$e_y$}
+  \addplot[TUMAccentGreen, thick] table[x=time, y=err_z, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$e_z$}
+  \end{axis}
+  \end{tikzpicture}
+  
+  \vspace{0.2cm}
+  
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.15\textheight,
+    xlabel={},
+    ylabel={$\|\mathbf{v}\|$ [m/s]},
+    grid=major,
+    xticklabels={},
+  ]
+  \addplot[TUMBlue, thick] table[x=time, y=speed_w, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \end{axis}
+  \end{tikzpicture}
+  
+  \vspace{0.2cm}
+  
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.15\textheight,
+    xlabel={},
+    ylabel={$\|\mathbf{a}\|$ [m/s$^2$]},
+    grid=major,
+    xticklabels={},
+  ]
+  \addplot[TUMAccentOrange, thick] table[x=time, y=acc_norm, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \end{axis}
+  \end{tikzpicture}
+  
+  \vspace{0.2cm}
+  
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.15\textheight,
+    xlabel={},
+    ylabel={Force [N]},
+    legend style={at={(0.5,1.05)}, anchor=south, legend columns=2, font=\small},
+    grid=major,
+    xticklabels={},
+  ]
+  \addplot[TUMAccentGreen, thick] table[x=time, y=F_aero_norm, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$\|\mathbf{F}_{\mathrm{aero}}\|$}
+  \addplot[TUMAccentOrange, thick] table[x=time, y=F_thrust_norm, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$\|\mathbf{F}_{\mathrm{thrust}}\|$}
+  \end{axis}
+  \end{tikzpicture}
+  
+  \vspace{0.2cm}
+  
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.15\textheight,
+    xlabel={Time [s]},
+    ylabel={Force [N]},
+    legend style={at={(0.5,1.05)}, anchor=south, legend columns=3, font=\small},
+    grid=major,
+  ]
+  \addplot[TUMBlue, thick] table[x=time, y=F_aero_x_w, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$F_{\mathrm{aero},x}$}
+  \addplot[TUMAccentOrange, thick] table[x=time, y=F_aero_y_w, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$F_{\mathrm{aero},y}$}
+  \addplot[TUMAccentGreen, thick] table[x=time, y=F_aero_z_w, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$F_{\mathrm{aero},z}$}
+  \end{axis}
+  \end{tikzpicture}
+  
+  \caption{Time-series flight dynamics during one complete circle at \SI{8}{\meter\per\second}. From top: position tracking errors (x, y, z), velocity magnitude, acceleration magnitude, force magnitudes (aerodynamic and thrust), and aerodynamic force components in world frame. The bounded errors and smooth force profiles demonstrate stable control despite time-varying aerodynamic loads approaching 6\,N.}
+  \label{fig:8mps_dynamics}
 \end{figure}
 
 \subsection{Variable-Speed Agility Demonstration}\label{sec:circular-tracking-detailed}
@@ -193,49 +373,6 @@ The increase is gradual rather than abrupt; there is no speed at which tracking 
   \end{tikzpicture}
   \caption{Tracking error as a function of flight speed during circular maneuvers. RMS and maximum errors remain bounded across the speed range; see Table~\ref{tab:variable_speed_metrics} for numerical values.}
   \label{fig:tracking_error_vs_speed}
-\end{figure}
-
-\subsection{Bank Angle and Coordinated Turn Behaviour}\label{sec:bank-angle}
-
-The circular flights also probe the coordinated-turn behaviour of the INDI controller.
-For a coordinated level turn with negligible sideslip, the required bank angle $\phi$ satisfies
-\begin{equation}
-  \tan(\phi) = \frac{a_c}{g},
-\end{equation}
-where $a_c$ is the centripetal acceleration.
-Figure~\ref{fig:bank_angle_vs_speed} compares the measured maximum roll angles during the circles against this theoretical value.
-
-At \SI{3}{\meter\per\second}, the platform banks to approximately \SI{30}{\degree}; at \SI{8}{\meter\per\second} it sustains bank angles near \SI{77}{\degree}, corresponding to $a_c \approx 2.8g$.
-The deviation between measured and theoretical bank angle remains within \SI{2}{\degree}--\SI{10}{\degree} across all speeds (Table~\ref{tab:variable_speed_metrics}), despite the presence of unmodelled lift and drag from the wings.
-This confirms that the INDI controller enforces near-coordinated turning behaviour without explicit aerodynamic compensation.
-
-\begin{figure}[htbp]
-  \centering
-  \begin{tikzpicture}
-  \begin{axis}[
-    tumplot,
-    width=0.85\textwidth,
-    height=0.5\textwidth,
-    xlabel={Cruise Speed [\si{\meter\per\second}]},
-    ylabel={Bank Angle [\si{\degree}]},
-    legend pos=north west,
-    grid=major,
-    ymin=0,
-    ymax=90,
-  ]
-  % Measured maximum bank angle
-  \addplot[TUMBlue, thick, mark=*, mark size=3pt] 
-    table[x=speed, y=measured_max_bank, col sep=comma]{data/circle/circle_bank_angle_comparison.csv};
-  \addlegendentry{Measured max bank angle}
-  
-  % Theoretical bank angle for coordinated turn
-  \addplot[TUMAccentOrange, dashed, thick, mark=square*, mark size=3pt]
-    table[x=speed, y=theoretical_bank, col sep=comma]{data/circle/circle_bank_angle_comparison.csv};
-  \addlegendentry{Theoretical (coordinated turn)}
-  \end{axis}
-  \end{tikzpicture}
-  \caption{Measured maximum bank angle versus theoretical coordinated-turn angle. The close match indicates that the vehicle performs near-coordinated turns across the tested speed range.}
-  \label{fig:bank_angle_vs_speed}
 \end{figure}
 
 \begin{table}[htbp]
