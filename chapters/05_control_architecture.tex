@@ -7,12 +7,12 @@ across hover and forward flight. The architecture follows a cascaded multirotor
 design with three main layers:
 
 \begin{enumerate}
-    \item a \emph{linear translational outer loop} that generates a commanded
+    \item a \emph{conventional PD-type translational outer loop} that generates a commanded
           specific force,
     \item a \emph{geometric attitude and rate controller} that converts this
           force into a desired attitude and angular-rate command, and
-    \item an \emph{Incremental Nonlinear Dynamic Inversion (INDI) inner loop}
-          that refines the torque command using measured angular acceleration
+    \item an \emph{Incremental Nonlinear Dynamic Inversion (INDI) torque controller}
+          that tracks the desired angular acceleration using measured angular acceleration
           and motor-speed feedback.
 \end{enumerate}
 
@@ -220,11 +220,14 @@ In summary, the geometric block:
           acceleration $\alpha_d$.
 \end{itemize}
 
+\paragraph{Philosophical distinction: geometric vs. INDI.}
+The geometric attitude and rate controller is fundamentally \emph{model-based}: it computes a desired angular acceleration $\alpha_d$ using the known inertia matrix $J$ and assumes that commanding this acceleration will drive the attitude error to zero. In contrast, the INDI inner loop described in the next section is \emph{model-free}: it does not rely on $J$ or any other dynamic model but instead uses measured angular acceleration and motor-speed feedback to incrementally adjust the torque command. This separation of roles is deliberate. The geometric layer provides a stable, well-understood reference trajectory for angular acceleration, while INDI ensures that this trajectory is tracked robustly in the presence of unmodeled disturbances---including aerodynamic moments from the fixed wings. The two layers complement each other: geometric control establishes what the vehicle should do, and INDI ensures it actually does so despite model uncertainties.
+
 % =====================================================================
-\section{INDI Inner-Loop Torque Refinement}
+\section{INDI Inner-Loop Torque Control}
 % =====================================================================
 
-The INDI inner loop refines the torque command so that the measured angular
+The INDI inner loop computes the torque command so that the measured angular
 acceleration tracks $\alpha_d$ despite unmodeled aerodynamic moments and other
 disturbances. The starting point is the rotational dynamics
 \begin{equation}
@@ -309,13 +312,13 @@ respect actuator constraints.
 
 The control architecture consists of:
 \begin{itemize}
-    \item a linear translational outer loop that produces a commanded specific
+    \item a conventional PD-type translational outer loop that produces a commanded specific
           force from position and velocity errors,
     \item a force-to-attitude mapping that defines a desired attitude and thrust
           magnitude consistent with this force,
     \item a geometric, tilt-prioritized attitude and rate controller that
           generates a desired angular acceleration $\alpha_d$,
-    \item an INDI inner loop that adjusts the torque command based on measured
+    \item an INDI-based torque controller that adjusts the torque command based on measured
           angular acceleration and motor-speed feedback, and
     \item a motor allocation step that maps thrust and torque to individual
           rotor thrusts using the full rotor geometry and tilt.

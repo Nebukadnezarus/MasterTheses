@@ -208,10 +208,14 @@ The fourth panel compares the magnitudes of aerodynamic and thrust forces.
 Aerodynamic force magnitude grows rapidly as the vehicle enters the turn, reaching peak values of above \SI{20}{\newton}---comparable to the weight of the wing assembly itself.
 Simultaneously, the thrust force magnitude is just above \SI{60}{\newton}.
 
-The bottom panel shows the aerodynamic force decomposed into world-frame components (x, y, z).
+The fifth panel shows the aerodynamic force decomposed into world-frame components (x, y, z).
 Notably, the horizontal components (x, y) dominate with magnitudes exceeding \SI{20}{\newton}, while the vertical component (z-axis) remains near zero throughout the maneuver.
 This force distribution reveals that the wings contribute primarily drag rather than lift during forward flight---the horizontal forces represent aerodynamic drag and centripetal side forces, while the negligible vertical component indicates minimal lift generation from the wing surfaces.
 The dominance of horizontal aerodynamic forces confirms that thrust vectoring through body attitude, rather than wing lift, provides the primary mechanism for generating lift.
+
+The bottom panel presents the decomposition of aerodynamic forces into lift and drag components in the body frame.
+During this maneuver at \SI{8}{\meter\per\second}, the wing-generated lift reaches approximately \SI{8}{\newton}, while the drag force peaks at approximately \SI{27}{\newton} at maximum speed.
+These values confirm the substantial aerodynamic loading on the platform and demonstrate the significant drag penalty associated with the wing configuration during aggressive maneuvering.
 
 This synchronized view confirms that the INDI controller maintains stable tracking throughout aggressive maneuvers despite substantial time-varying aerodynamic loads comparable in magnitude to the wing assembly weight.
 The smooth force profiles and bounded tracking errors indicate that incremental feedback successfully compensates for the unmodelled aerodynamic disturbances without requiring explicit force prediction or feedforward terms.
@@ -297,10 +301,11 @@ The smooth force profiles and bounded tracking errors indicate that incremental 
     tumplot,
     width=0.95\textwidth,
     height=0.15\textheight,
-    xlabel={Time [s]},
+    xlabel={},
     ylabel={Force [N]},
     legend style={at={(0.5,1.05)}, anchor=south, legend columns=3, font=\small},
     grid=major,
+    xticklabels={},
   ]
   \addplot[TUMBlue, thick] table[x=time, y=F_aero_x_w, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
   \addlegendentry{$F_{\mathrm{aero},x}$}
@@ -311,7 +316,26 @@ The smooth force profiles and bounded tracking errors indicate that incremental 
   \end{axis}
   \end{tikzpicture}
   
-  \caption{Time-series flight dynamics during one complete circle at \SI{8}{\meter\per\second}. From top: position tracking errors (x, y, z), velocity magnitude, acceleration magnitude, force magnitudes (aerodynamic and thrust), and aerodynamic force components in world frame. The bounded errors and smooth force profiles demonstrate stable control despite time-varying aerodynamic loads approaching 6\,N.}
+  \vspace{0.2cm}
+  
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.95\textwidth,
+    height=0.15\textheight,
+    xlabel={Time [s]},
+    ylabel={Force [N]},
+    legend style={at={(0.5,1.05)}, anchor=south, legend columns=2, font=\small},
+    grid=major,
+  ]
+  \addplot[TUMBlue, thick] table[x=time, y=F_lift_b_norm, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$\|\mathbf{F}_{\mathrm{lift}}\|$}
+  \addplot[TUMAccentOrange, thick] table[x=time, y=F_drag_b_norm, col sep=comma] {data/circle/circle_8mps_imu_timeseries.csv};
+  \addlegendentry{$\|\mathbf{F}_{\mathrm{drag}}\|$}
+  \end{axis}
+  \end{tikzpicture}
+  
+  \caption{Time-series flight dynamics during one complete circle at \SI{8}{\meter\per\second}. From top: position tracking errors (x, y, z), velocity magnitude, acceleration magnitude, force magnitudes (aerodynamic and thrust), aerodynamic force components in world frame, and lift and drag force magnitudes. The bounded errors and smooth force profiles demonstrate stable control despite time-varying aerodynamic loads approaching 6\,N.}
   \label{fig:8mps_dynamics}
 \end{figure}
 

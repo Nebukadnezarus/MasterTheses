@@ -20,7 +20,7 @@ The central research question is:
 \textit{Can a standard multirotor INDI-based controller without aerodynamic modeling maintain accurate trajectory tracking on a quadrotor with significant aerodynamic lift, and does the resulting rotor unloading translate into measurable electrical power savings?}
 \end{quote}
 
-To answer this, the work combines modeling, design, and experimental validation. A six-degree-of-freedom dynamics model with simplified aerodynamic terms is derived. A fully 3D-printed ``X-wing'' quadrotor platform is built to match this model. The controller architecture employs a cascaded structure with a linear translational outer loop, force-to-attitude mapping, geometric attitude and rate control, and an INDI inner loop for torque refinement, implemented in C++ using ROS~1 and validated through motion-capture experiments, as well as outdoor flights with synchronized power logging.
+To answer this, the work combines modeling, design, and experimental validation. A six-degree-of-freedom dynamics model with simplified aerodynamic terms is derived. A fully 3D-printed ``X-wing'' quadrotor platform is built to match this model. The controller architecture employs a cascaded structure with a conventional PD-type translational outer loop, force-to-attitude mapping, geometric attitude and rate control, and an INDI-based torque controller, implemented in C++ using ROS~1 and validated through motion-capture experiments, as well as outdoor flights with synchronized power logging.
 
 The scope of this work is intentionally limited: no aerodynamic model is used in the controller, and no transition or hybrid flight regime is considered. Instead, the study isolates the interaction between fixed-wing lift and a standard multirotor INDI-based controller in forward flight, without introducing gain scheduling or aerodynamic compensation.
 
@@ -32,7 +32,7 @@ The contributions of this thesis are:
   
   \item \textbf{Dynamics model}: A minimal 6-DoF model including quadratic lift and drag suitable for control and simulation.
   
-  \item \textbf{Control architecture}: A cascaded structure with a linear translational outer loop, force-to-attitude mapping, geometric attitude and rate control, and INDI inner loop for torque refinement that rejects aerodynamic disturbances without explicit modeling.
+  \item \textbf{Control architecture}: A cascaded structure with a conventional PD-type translational outer loop, force-to-attitude mapping, geometric attitude and rate control, and an INDI-based torque controller that rejects aerodynamic disturbances without explicit modeling.
   
   \item \textbf{Experimental validation}: System identification, model validation, and indoor motion-capture trials as well as outdoor flights with synchronized power logging.
   
