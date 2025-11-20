@@ -689,6 +689,340 @@ $L/D$ at \SI{6}{\degree} cruise & 43.9 & 64.4 \\
 \end{tabular}
 \end{table}
 
+\section{Full-Regime Aerodynamic Characterization from Straight-Line Flight Data}\label{sec:full-regime-aero}
+
+While the quasi-steady coefficient identification in Section~\ref{sec:aerodynamic_forces_quantification} provided point estimates at discrete flight conditions, a more complete characterization requires capturing the continuous variation of aerodynamic forces across the full speed and angle-of-attack envelope.
+This section presents a comprehensive analysis of aerodynamic behavior during accelerating straight-line flight maneuvers using the NACA~0015 wing configuration, where the vehicle transitions through a wide range of speeds and attitudes.
+
+The analysis employs the same force-balance methodology as Section~\ref{sec:8mps-dynamics} but extends it to transient flight regimes.
+Aerodynamic forces are decomposed relative to the instantaneous velocity vector, yielding drag (force opposing motion) and normal aerodynamic force (perpendicular component).
+
+\subsection{Force-Balance Methodology}\label{sec:force-balance-full}
+
+The force-balance method is identical to the approach described in Section~\ref{sec:8mps-dynamics} (equations~\eqref{eq:force_balance_imu}--\eqref{eq:aero_force_extraction}).
+Aerodynamic forces are extracted as the residual after subtracting thrust (estimated from motor RPM using equation~\eqref{eq:thrust-rpm-fit}) from the IMU-measured specific forces, then rotated to the world frame using the measured quaternion.
+
+\subsection{Velocity-Relative Force Decomposition}\label{sec:velocity-decomposition}
+
+Let $\mathbf{v}_w$ be the world-frame velocity and
+\begin{equation}
+\hat{\mathbf{v}} = \frac{\mathbf{v}_w}{\|\mathbf{v}_w\|}
+\label{eq:velocity_unit_vector}
+\end{equation}
+its unit direction.
+
+\paragraph{Drag.}
+Defined strictly as the aerodynamic force opposing the motion:
+\begin{equation}
+D = -\mathbf{F}_{\text{aero},w}^\top \hat{\mathbf{v}}.
+\label{eq:drag_velocity_based}
+\end{equation}
+This matches the classical aerodynamic definition and remains valid under arbitrary flight attitudes.
+
+\paragraph{Normal aerodynamic force.}
+The component orthogonal to the velocity vector is:
+\begin{equation}
+\mathbf{F}_\perp = \mathbf{F}_{\text{aero},w} - (\mathbf{F}_{\text{aero},w}^\top \hat{\mathbf{v}}) \hat{\mathbf{v}},
+\label{eq:normal_force_vector}
+\end{equation}
+with magnitude
+\begin{equation}
+L = \|\mathbf{F}_\perp\|.
+\label{eq:normal_force_magnitude}
+\end{equation}
+
+\textbf{Interpretation:}
+$L$ is not wing-only lift.
+It is the total normal aerodynamic force of the complete vehicle (wings + fuselage + propeller-induced effects).
+This distinction is critical: unlike traditional fixed-wing analysis, this ``lift'' includes contributions from all surfaces and flow interactions, not just wing aerodynamics.
+
+\subsection{Aerodynamic Coefficients and Angle of Attack}\label{sec:coeffs-aoa-full}
+
+\paragraph{Aerodynamic coefficients.}
+Dynamic pressure:
+\begin{equation}
+q = \frac{1}{2}\rho V^2, \quad V = \|\mathbf{v}_w\|.
+\label{eq:dynamic_pressure_full}
+\end{equation}
+Using the reference wing area $S$:
+\begin{align}
+C_L &= \frac{L}{qS}, \label{eq:CL_velocity_based} \\
+C_D &= \frac{D}{qS}. \label{eq:CD_velocity_based}
+\end{align}
+These coefficients represent the system-level aerodynamic behavior, not wing-only airfoil performance.
+
+\paragraph{Kinematic angle-of-attack proxy.}
+We use a kinematic proxy defined as the angle between the body $z$-axis and the flight direction:
+\begin{equation}
+\alpha_z = \arccos\left(\frac{\mathbf{v}_b^\top \mathbf{e}_3}{\|\mathbf{v}_b\|}\right),
+\label{eq:alpha_z_proxy}
+\end{equation}
+where $\mathbf{v}_b = \mathbf{R}_{wb} \mathbf{v}_w$ is the velocity in the body frame and $\mathbf{e}_3 = [0, 0, 1]^\top$ represents the body $z$-axis, which aligns with both the rotor thrust direction and the wing chord line.
+
+\subsection{Test Parameters}\label{sec:full-regime-parameters}
+
+Table~\ref{tab:full_regime_parameters} summarizes the key physical and experimental parameters used in the straight-line flight aerodynamic analysis.
+
+\begin{table}[htbp]
+\centering
+\caption{Physical and experimental parameters for straight-line flight aerodynamic analysis.}
+\label{tab:full_regime_parameters}
+\begin{tabular}{lll}
+\hline
+\textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
+\hline
+\multicolumn{3}{l}{\textit{Vehicle Properties}} \\
+Total mass & $m$ & \SI{2.5}{\kilogram} \\
+Wing reference area & $S$ & \SI{0.318}{\meter\squared} \\
+Wing configuration & --- & NACA~0015, $\pm\SI{45}{\degree}$ \\
+\hline
+\multicolumn{3}{l}{\textit{Environmental Conditions}} \\
+Air density & $\rho$ & \SI{1.225}{\kilogram\per\meter\cubed} \\
+\hline
+\multicolumn{3}{l}{\textit{Flight Condition Ranges}} \\
+Velocity range & $V$ & \SIrange{0}{12}{\meter\per\second} \\
+Angle-of-attack range & $\alpha_z$ & \SIrange{0}{70}{\degree} \\
+\hline
+\multicolumn{3}{l}{\textit{Force Components (World Frame)}} \\
+Lift (vertical) & $F_z$ & Normal to gravity \\
+Drag (horizontal, opposes motion) & $F_y$ & Along flight direction \\
+Side force & $F_x$ & Perpendicular to flight \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Experimental Results}\label{sec:full-regime-results}
+
+Straight-line flight tests were conducted using the NACA~0015 $\pm\SI{45}{\degree}$ wing configuration to characterize aerodynamic behavior across transient acceleration maneuvers, spanning speeds from near-zero to approximately \SI{12}{\meter\per\second}.
+
+Figure~\ref{fig:straight_line_trajectory_xy} shows the trajectory in the horizontal plane, demonstrating the straight-line nature of the maneuver with minimal lateral deviation.
+Figure~\ref{fig:straight_line_trajectory_zy} presents the trajectory in the vertical plane, revealing the altitude profile during the acceleration and deceleration phases.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.75\textwidth,
+    height=0.6\textwidth,
+    xlabel={$x$ [\si{\meter}]},
+    ylabel={$y$ [\si{\meter}]},
+    grid=major,
+    axis equal,
+  ]
+  \addplot[thick, tumblue, no marks] 
+    table[x=x_m, y=y_m, col sep=comma]{data/aero_force_from_imu/straight_line_trajectory.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Straight-line flight trajectory in the horizontal ($x$--$y$) plane during the aerodynamic characterization maneuver (2.5--6.0\,s). The vehicle maintains a nearly straight path with minimal lateral deviation.}
+  \label{fig:straight_line_trajectory_xy}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.75\textwidth,
+    height=0.6\textwidth,
+    xlabel={$y$ [\si{\meter}]},
+    ylabel={$z$ [\si{\meter}]},
+    grid=major,
+    axis equal,
+  ]
+  \addplot[thick, tumblue, no marks] 
+    table[x=y_m, y=z_m, col sep=comma]{data/aero_force_from_imu/straight_line_trajectory.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Straight-line flight trajectory in the vertical ($y$--$z$) plane, showing the altitude profile during acceleration and deceleration.}
+  \label{fig:straight_line_trajectory_zy}
+\end{figure}
+
+Figure~\ref{fig:speed_vs_time} shows the velocity profile throughout the maneuver, confirming the smooth acceleration to peak speed near \SI{12}{\meter\per\second}.
+Figure~\ref{fig:aoa_vs_time} presents the kinematic angle-of-attack proxy $\alpha_z$ (angle between body $z$-axis and velocity vector) throughout the maneuver.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Time [\si{\second}]},
+    ylabel={Speed [\si{\meter\per\second}]},
+    grid=major,
+  ]
+  \addplot[thick, tumblue, no marks] 
+    table[x=time_s, y=speed_mps, col sep=comma]{data/aero_force_from_imu/speed_vs_time.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Flight speed versus time during the straight-line aerodynamic characterization maneuver. The vehicle accelerates from hover to approximately \SI{12}{\meter\per\second} before decelerating.}
+  \label{fig:speed_vs_time}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Time [\si{\second}]},
+    ylabel={Angle of Attack [\si{\degree}]},
+    xmin=3.5,
+    grid=major,
+  ]
+  \addplot[thick, tumblue, no marks] 
+    table[x=time_s, y=angle_of_attack_deg, col sep=comma]{data/aero_force_from_imu/angle_of_attack_vs_time.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Kinematic angle-of-attack proxy $\alpha_z$ (angle between body $z$-axis and velocity vector) versus time. Data begins at 3.5\,s as the angle of attack is undefined during hover due to negligible velocity.}
+  \label{fig:aoa_vs_time}
+\end{figure}
+
+Figure~\ref{fig:aero_force_vs_velocity} shows the aerodynamic force components as a function of flight speed during these maneuvers.
+All three world-frame components ($F_{\text{aero},x}$, $F_{\text{aero},y}$, $F_{\text{aero},z}$) are plotted to reveal the complete force distribution.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Velocity [\si{\meter\per\second}]},
+    ylabel={Aerodynamic Force [\si{\newton}]},
+    legend pos=north west,
+    grid=major,
+  ]
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumblue] 
+    table[x=velocity_mps, y=Fx_aero_N, col sep=comma]{data/aero_force_from_imu/aero_force_vs_velocity.csv};
+  \addlegendentry{$F_{\text{aero},x}$}
+  
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumorange] 
+    table[x=velocity_mps, y=Fy_aero_N, col sep=comma]{data/aero_force_from_imu/aero_force_vs_velocity.csv};
+  \addlegendentry{$F_{\text{aero},y}$}
+  
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumgreen] 
+    table[x=velocity_mps, y=Fz_aero_N, col sep=comma]{data/aero_force_from_imu/aero_force_vs_velocity.csv};
+  \addlegendentry{$F_{\text{aero},z}$}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Aerodynamic force components in world frame versus flight speed during straight-line acceleration. The scatter reflects transient flight conditions across the full speed envelope.}
+  \label{fig:aero_force_vs_velocity}
+\end{figure}
+
+The aerodynamic force distribution reveals the dominant contributions of lift and drag during high-speed flight.
+In the world frame, $F_z$ corresponds to the vertical lift force, $F_y$ represents the drag force opposing forward motion, and $F_x$ is the lateral side force.
+At approximately \SI{12}{\meter\per\second}, both lift and drag forces reach approximately \SI{17}{\newton}.
+The side force $F_x$ remains near zero throughout the maneuver, confirming symmetric flight conditions.
+
+The lift force magnitude of \SI{17}{\newton} is particularly significant: with a vehicle mass of \SI{2.5}{\kilo\gram}, this corresponds to approximately \SI{70}{\percent} of the gravitational force (\SI{24.5}{\newton}).
+This substantial aerodynamic lift contribution explains the reduced propeller thrust requirements at high speed.
+At \SI{12}{\meter\per\second}, the angle of attack remains below \SI{20}{\degree}, meaning the propellers are nearly horizontal and provide minimal vertical thrust component.
+The wing's aerodynamic lift effectively replaces the propellers' vertical force authority during forward flight.
+
+A notable artifact appears in Figure~\ref{fig:aero_force_vs_velocity}: the lift force $F_z$ exhibits a constant offset of approximately \SI{1}{\newton} at zero velocity.
+This unphysical result stems from inaccuracies in the thrust mapping model.
+The extracted aerodynamic force becomes distinguishable from this baseline error only above approximately \SI{4}{\meter\per\second}.
+This observation motivates the \SI{5}{\meter\per\second} velocity threshold applied to coefficient calculations—corresponding to approximately \SI{4.25}{\second} into the maneuver (Figure~\ref{fig:aoa_vs_time}) and an angle of attack near \SI{40}{\degree}.
+
+Figure~\ref{fig:aero_force_vs_alpha} presents the same force components as a function of the kinematic angle-of-attack proxy $\alpha_z$.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Angle of Attack Proxy, $\alpha_z$ [\si{\degree}]},
+    ylabel={Aerodynamic Force [\si{\newton}]},
+    legend pos=north east,
+    grid=major,
+  ]
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumblue] 
+    table[x=angle_of_attack_deg, y=Fx_aero_N, col sep=comma]{data/aero_force_from_imu/aero_force_vs_alpha.csv};
+  \addlegendentry{$F_{\text{aero},x}$}
+  
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumorange] 
+    table[x=angle_of_attack_deg, y=Fy_aero_N, col sep=comma]{data/aero_force_from_imu/aero_force_vs_alpha.csv};
+  \addlegendentry{$F_{\text{aero},y}$}
+  
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumgreen] 
+    table[x=angle_of_attack_deg, y=Fz_aero_N, col sep=comma]{data/aero_force_from_imu/aero_force_vs_alpha.csv};
+  \addlegendentry{$F_{\text{aero},z}$}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Aerodynamic force components versus kinematic angle-of-attack proxy $\alpha_z$. The wide angle range reflects transient attitude changes during acceleration.}
+  \label{fig:aero_force_vs_alpha}
+\end{figure}
+
+Figure~\ref{fig:coeffs_vs_alpha} shows the extracted lift and drag coefficients as a function of $\alpha_z$.
+The velocity-based decomposition (equations~\eqref{eq:drag_velocity_based}--\eqref{eq:normal_force_magnitude}) yields $C_L$ and $C_D$ values that represent the complete vehicle aerodynamics, including fuselage, wings, and propeller interactions.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Angle of Attack Proxy, $\alpha_z$ [\si{\degree}]},
+    ylabel={Aerodynamic Coefficient [-]},
+    legend pos=north west,
+    grid=major,
+  ]
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumblue] 
+    table[x=angle_of_attack_deg, y=CL, col sep=comma]{data/aero_force_from_imu/aerodynamic_coefficients.csv};
+  \addlegendentry{$C_L$}
+  
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumorange] 
+    table[x=angle_of_attack_deg, y=CD, col sep=comma]{data/aero_force_from_imu/aerodynamic_coefficients.csv};
+  \addlegendentry{$C_D$}
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Lift and drag coefficients versus angle-of-attack proxy during straight-line flight (data filtered for $V > \SI{5}{\meter\per\second}$). Scatter reflects transient conditions and measurement noise.}
+  \label{fig:coeffs_vs_alpha}
+\end{figure}
+
+The coefficient analysis reveals trends consistent with airfoil theory, but interpretation requires careful consideration of the velocity dependence in Equation~\ref{eq:drag_velocity_based}.
+The drag coefficient $C_D$ rises with angle of attack, reaching a maximum value of approximately 1.5 at $\alpha_z \approx \SI{43}{\degree}$.
+Similarly, the lift coefficient $C_L$ peaks at approximately 0.8 at the same high angle.
+
+However, these peak values correspond to low-velocity flight conditions, as evident from the speed-versus-time data.
+Since the aerodynamic coefficients are computed using $C = F / (0.5 \rho V^2 S)$, velocity appears in the denominator.
+At near-hover conditions, even small residual aerodynamic forces or measurement noise can produce artificially inflated coefficient values as $V \to 0$.
+The unphysical \SI{1}{\newton} lift offset observed in Figure~\ref{fig:aero_force_vs_velocity} particularly affects this calculation: when divided by near-zero dynamic pressure, this thrust mapping error manifests as spurious coefficient values.
+Figure~\ref{fig:coeffs_vs_alpha} shows evidence of this contamination—$C_L$ increases again above $\alpha_z > \SI{40}{\degree}$, a physically implausible trend resulting from the constant force offset combined with vanishing airspeed.
+
+The velocity filtering threshold of \SI{5}{\meter\per\second} mitigates this issue, but coefficients at low angles of attack—corresponding to higher speeds—provide more reliable estimates.
+In this regime, the extracted values align well with the measurements from Section~\ref{sec:aerodynamic_forces_quantification}.
+
+Finally, Figure~\ref{fig:ld_vs_alpha} presents the lift-to-drag ratio $L/D$ as a function of $\alpha_z$.
+Peak efficiency occurs at moderate angles, consistent with the airfoil analysis, though absolute values are lower due to system-level drag contributions.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{axis}[
+    tumplot,
+    width=0.85\textwidth,
+    height=0.5\textwidth,
+    xlabel={Angle of Attack Proxy, $\alpha_z$ [\si{\degree}]},
+    ylabel={Lift-to-Drag Ratio, $L/D$ [-]},
+    legend pos=north east,
+    grid=major,
+    ymin=0,
+  ]
+  \addplot[only marks, mark=*, mark size=1pt, opacity=0.3, tumblue] 
+    table[x=angle_of_attack_deg, y=CL_CD, col sep=comma]{data/aero_force_from_imu/aerodynamic_coefficients.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Lift-to-drag ratio versus angle-of-attack proxy during straight-line flight (data filtered for $V > \SI{5}{\meter\per\second}$). Peak $L/D$ occurs at moderate angles, consistent with optimal cruise conditions.}
+  \label{fig:ld_vs_alpha}
+\end{figure}
+
 \section{Outdoor Flight Validation}\label{sec:outdoor-flight}
 
 The outdoor power-efficiency tests were performed using the improved AG25 $\pm\SI{20}{\degree}$ configuration, chosen based on the aerodynamic-coefficient analysis that demonstrated its superior efficiency compared to the baseline NACA~0015 $\pm\SI{45}{\degree}$ design.
