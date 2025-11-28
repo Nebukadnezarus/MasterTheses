@@ -22,7 +22,7 @@ The quadrotor literature establishes that INDI can tolerate substantial unmodele
 Hybrid VTOL platforms combine multirotor hovering with fixed-wing cruise capability. They fall into two major categories:
 
 \paragraph{Tilt-rotor and tilt-wing aircraft.}
-Tilt-rotor concepts reorient propulsion units mechanically~\cite{Hartmann2017,Bauersfeld2021}. Control design requires accurate aerodynamic models, explicit transition logic, and coordinated actuator scheduling. Mode switches between hover and forward flight introduce nonlinear couplings that must be explicitly handled.
+Tilt-rotor concepts reorient propulsion units mechanically~\cite{Bauersfeld2021}. Control design requires accurate aerodynamic models, explicit transition logic, and coordinated actuator scheduling. Mode switches between hover and forward flight introduce nonlinear couplings that must be explicitly handled.
 
 \paragraph{Tailsitters and transition-capable platforms.}
 Tailsitters retain fixed actuators but operate over radically different aerodynamic regimes~\cite{Oosedo2017,Tal2022Global}. Control architectures typically blend multirotor and fixed-wing control laws, with transition management depending on angle-of-attack estimation and aerodynamic model interpolation~\cite{DaudFilho2024}. Gains must adapt to the current flight regime to ensure stability during transition.
